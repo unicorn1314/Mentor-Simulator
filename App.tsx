@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal } from 'lucide-react';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
 import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS } from './constants';
 
@@ -12,12 +12,12 @@ const StatBar: React.FC<{ label: string; value: number; icon: React.ReactNode; c
     <div className="flex-1">
       <div className="flex justify-between text-sm font-bold mb-1 text-stone-700">
         <span>{label}</span>
-        <span>{value}/20</span>
+        <span className={value <= 0 ? "text-red-600 animate-pulse" : ""}>{value}/20</span>
       </div>
       <div className="h-2 bg-stone-200 rounded-full overflow-hidden border border-stone-300">
         <div 
           className={`h-full transition-all duration-500 ${color.replace('bg-', 'bg-opacity-80 bg-')}`} 
-          style={{ width: `${Math.min(100, (value / 20) * 100)}%` }}
+          style={{ width: `${Math.max(0, Math.min(100, (value / 20) * 100))}%` }}
         />
       </div>
     </div>
@@ -83,6 +83,14 @@ export default function App() {
       status: 'active',
       enrollmentYear: year
     };
+  };
+
+  const checkGameOver = (stats: Stats): { isOver: boolean; reason?: string } => {
+    if (stats.reputation <= 0) return { isOver: true, reason: '【身败名裂】由于口碑崩塌，学校决定解除你的聘用合同。' };
+    if (stats.satisfaction <= 0) return { isOver: true, reason: '【众叛亲离】你的学生集体联名举报或退学，你的实验室被强制关闭。' };
+    if (stats.academic <= 0) return { isOver: true, reason: '【末位淘汰】由于长期没有学术产出，你在非升即走考核中被淘汰。' };
+    if (stats.resources <= -5) return { isOver: true, reason: '【严重赤字】实验室负债累累，涉嫌违规挪用资金，你被带走调查。' };
+    return { isOver: false };
   };
 
   // --- Actions ---
@@ -177,7 +185,9 @@ export default function App() {
       if (currentStats.satisfaction > 14) s.stress = Math.max(0, s.stress - 1);
 
       // Check for Quit
-      if (s.stress > 9 && Math.random() < 0.3) {
+      // Higher chance to quit if satisfaction is low
+      const quitChance = s.stress > 9 ? 0.4 : (s.stress > 7 ? 0.1 : 0);
+      if (Math.random() < quitChance) {
         logMessages.push({ year: currentYear, message: `${s.name} 因压力过大退学了。`, type: 'risk' });
         statChanges.reputation = (statChanges.reputation || 0) - 1;
         return { ...s, status: 'quit' };
@@ -209,19 +219,20 @@ export default function App() {
     return { newStudents, logMessages, statChanges };
   };
 
-  const advanceYear = () => {
+  const advanceYear = (bypassSummary = false) => {
     if (gameState.year >= RETIREMENT_YEAR || gameState.isGameOver) {
       setGameState(prev => ({ ...prev, phase: 'ENDING' }));
       return;
     }
 
-    const nextYear = gameState.year + 1;
-
-    // Check for 5-Year Summary Phase (Before next year starts logic, but visually after previous year)
-    if (gameState.year % 5 === 0 && gameState.phase !== 'SUMMARY') {
+    // Check for 5-Year Summary Phase
+    // Loop fix: if bypassSummary is true, we skip this block and force advancement
+    if (!bypassSummary && gameState.year % 5 === 0 && gameState.phase !== 'SUMMARY') {
         setGameState(prev => ({ ...prev, phase: 'SUMMARY' }));
         return;
     }
+
+    const nextYear = gameState.year + 1;
 
     // --- Start of New Year Logic ---
 
@@ -250,13 +261,33 @@ export default function App() {
         newStudents.push(generateStudent(nextYear));
     }
 
-    // 3. Apply Changes
+    // 3. Apply Changes (Allow going below 0 for Game Over check)
     const finalStats = {
-        academic: Math.max(0, Math.min(20, gameState.stats.academic + (passiveChanges.academic || 0) + (statChanges.academic || 0))),
-        reputation: Math.max(0, Math.min(20, gameState.stats.reputation + (passiveChanges.reputation || 0) + (statChanges.reputation || 0))),
-        satisfaction: Math.max(0, Math.min(20, gameState.stats.satisfaction + (passiveChanges.satisfaction || 0) + (statChanges.satisfaction || 0))),
-        resources: Math.max(0, Math.min(20, gameState.stats.resources + (passiveChanges.resources || 0) + (statChanges.resources || 0))),
+        academic: gameState.stats.academic + (passiveChanges.academic || 0) + (statChanges.academic || 0),
+        reputation: gameState.stats.reputation + (passiveChanges.reputation || 0) + (statChanges.reputation || 0),
+        satisfaction: gameState.stats.satisfaction + (passiveChanges.satisfaction || 0) + (statChanges.satisfaction || 0),
+        resources: gameState.stats.resources + (passiveChanges.resources || 0) + (statChanges.resources || 0),
     };
+    
+    // Check Game Over immediately after year processing
+    const gameOverCheck = checkGameOver(finalStats);
+    if (gameOverCheck.isOver) {
+        setGameState(prev => ({
+            ...prev,
+            year: nextYear,
+            stats: finalStats,
+            phase: 'GAMEOVER',
+            isGameOver: true,
+            gameOverReason: gameOverCheck.reason
+        }));
+        return;
+    }
+
+    // Clamp stats max only (min is open for risk)
+    finalStats.academic = Math.min(20, finalStats.academic);
+    finalStats.reputation = Math.min(20, finalStats.reputation);
+    finalStats.satisfaction = Math.min(20, finalStats.satisfaction);
+    finalStats.resources = Math.min(20, finalStats.resources);
 
     // 4. Check Achievements
     let unlockedAchievs = [...gameState.achievements];
@@ -297,11 +328,12 @@ export default function App() {
   const handleChoice = (effect: (s: Stats) => Partial<Stats>, choiceText: string, resultText?: string, setFlag?: string) => {
     const changes = effect(gameState.stats);
     
+    // Apply changes without clamping min to 0 initially to catch game over
     const newStats = {
-      academic: Math.max(0, Math.min(20, gameState.stats.academic + (changes.academic || 0))),
-      reputation: Math.max(0, Math.min(20, gameState.stats.reputation + (changes.reputation || 0))),
-      satisfaction: Math.max(0, Math.min(20, gameState.stats.satisfaction + (changes.satisfaction || 0))),
-      resources: Math.max(0, Math.min(20, gameState.stats.resources + (changes.resources || 0))),
+      academic: Math.min(20, gameState.stats.academic + (changes.academic || 0)),
+      reputation: Math.min(20, gameState.stats.reputation + (changes.reputation || 0)),
+      satisfaction: Math.min(20, gameState.stats.satisfaction + (changes.satisfaction || 0)),
+      resources: Math.min(20, gameState.stats.resources + (changes.resources || 0)),
     };
 
     const newFlags = { ...gameState.flags };
@@ -309,37 +341,56 @@ export default function App() {
         newFlags[setFlag] = true;
     }
 
+    // Check Game Over
+    const gameOverCheck = checkGameOver(newStats);
+    
+    if (gameOverCheck.isOver) {
+        setGameState(prev => ({
+            ...prev,
+            stats: newStats,
+            flags: newFlags,
+            phase: 'GAMEOVER',
+            isGameOver: true,
+            gameOverReason: gameOverCheck.reason,
+            lastEventResult: { text: resultText || '发生了意想不到的事情...', changes }, // Show result then die? No, jump straight to die or show result then die.
+            // Let's go to result first, then clicking confirm goes to gameover.
+        }));
+        // We override the phase in the state update below, but wait, if I set RESULT phase, confirmResult needs to know to go to GAMEOVER.
+        // Actually simpler: Set Result, and in confirmResult check game over.
+    }
+    
     setGameState(prev => ({
       ...prev,
       stats: newStats,
       flags: newFlags,
-      phase: 'RESULT',
+      phase: gameOverCheck.isOver ? 'RESULT' : 'RESULT', // Always show result first
       currentEvent: null,
       lastEventResult: { text: resultText || '发生了意想不到的事情...', changes },
       history: [
         { year: prev.year, message: `事件：${prev.currentEvent?.title} -> 选择：${choiceText}`, type: 'event' },
         ...(resultText ? [{ year: prev.year, message: `结果：${resultText}`, type: 'event' } as LogEntry] : []),
         ...prev.history
-      ]
+      ],
+      isGameOver: gameOverCheck.isOver,
+      gameOverReason: gameOverCheck.reason
     }));
   };
 
   const confirmResult = () => {
-    setGameState(prev => ({
-      ...prev,
-      phase: 'PLAYING',
-      lastEventResult: null
-    }));
+    if (gameState.isGameOver) {
+        setGameState(prev => ({ ...prev, phase: 'GAMEOVER', lastEventResult: null }));
+    } else {
+        setGameState(prev => ({
+        ...prev,
+        phase: 'PLAYING',
+        lastEventResult: null
+        }));
+    }
   };
 
   const closeSummary = () => {
-      // Just switch phase back to playing and call advanceYear logic to actually move time forward
-      // Note: The advanceYear function logic handles the increment. 
-      // When we hit modulo 5, we pause at SUMMARY. 
-      // Closing summary should essentially just resume the "End of Year" flow which leads to "Next Year".
-      // But simpler is: The year hasn't advanced yet when summary shows (it shows at end of year X).
-      // So we just set phase to Playing. The user will then click "Next Year".
-      setGameState(prev => ({ ...prev, phase: 'PLAYING' }));
+      // Explicitly bypass the summary check to advance to the next year
+      advanceYear(true);
   };
 
   // Start first event
@@ -363,8 +414,8 @@ export default function App() {
         <Card className="p-8 transform hover:scale-105 transition-transform duration-300 cursor-default">
           <p className="text-lg text-stone-600 mb-6 leading-relaxed">
             你即将入职某知名高校，开启长达30年的导师生涯。<br/>
+            <span className="text-red-600 font-bold">警告：属性过低可能导致直接解聘或破产！</span><br/>
             是成为学术泰斗，还是桃李满天下的教育家？<br/>
-            亦或是长袖善舞的资源大佬？<br/>
             一切由你决定。
           </p>
           <Button onClick={startGame} className="w-full text-lg py-4">
@@ -433,10 +484,12 @@ export default function App() {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-stone-800 animate-in fade-in zoom-in duration-300">
-                <div className="bg-stone-100 p-6 border-b border-stone-200 flex items-center gap-3">
+            <div className={`max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${category === 'risk' ? 'border-red-600' : 'border-stone-800'} animate-in fade-in zoom-in duration-300`}>
+                <div className={`${category === 'risk' ? 'bg-red-50' : 'bg-stone-100'} p-6 border-b border-stone-200 flex items-center gap-3`}>
                    {categoryIcons[category]}
-                   <span className="font-bold text-stone-500 uppercase tracking-widest text-sm">{category === 'academic' ? '学术科研' : category === 'student' ? '学生指导' : category === 'career' ? '职场发展' : category === 'network' ? '人脉资源' : '风险事件'}</span>
+                   <span className={`font-bold uppercase tracking-widest text-sm ${category === 'risk' ? 'text-red-600' : 'text-stone-500'}`}>
+                       {category === 'academic' ? '学术科研' : category === 'student' ? '学生指导' : category === 'career' ? '职场发展' : category === 'network' ? '人脉资源' : '高危风险事件'}
+                   </span>
                 </div>
                 <div className="p-8">
                     <h3 className="text-3xl font-bold mb-4 serif text-stone-900">{title}</h3>
@@ -493,7 +546,9 @@ export default function App() {
                         </div>
                     )}
                     
-                    <Button onClick={confirmResult} className="w-full">确认</Button>
+                    <Button onClick={confirmResult} className="w-full">
+                        {gameState.isGameOver ? '接受命运' : '确认'}
+                    </Button>
                 </div>
             </div>
         </div>
@@ -540,6 +595,42 @@ export default function App() {
         </div>
       );
   };
+
+  const renderGameOver = () => (
+    <div className="min-h-screen bg-red-900 text-stone-100 p-4 flex items-center justify-center">
+        <div className="max-w-2xl w-full bg-stone-900 rounded-2xl shadow-2xl p-8 border-4 border-red-700 animate-in zoom-in duration-500">
+            <div className="text-center space-y-4">
+                <Skull size={64} className="mx-auto text-red-600 mb-4" />
+                <h1 className="text-5xl font-bold text-white mb-2">生涯终结</h1>
+                <p className="text-2xl text-red-400 font-serif font-bold">{gameState.gameOverReason}</p>
+                <p className="text-stone-400">坚持了 {gameState.year} 年，倒在了退休前夕。</p>
+                
+                <div className="py-8 grid grid-cols-4 gap-4 text-center">
+                    <div>
+                         <div className="text-xs uppercase text-stone-500">学术</div>
+                         <div className="text-xl font-bold">{gameState.stats.academic}</div>
+                    </div>
+                    <div>
+                         <div className="text-xs uppercase text-stone-500">口碑</div>
+                         <div className="text-xl font-bold">{gameState.stats.reputation}</div>
+                    </div>
+                     <div>
+                         <div className="text-xs uppercase text-stone-500">学生</div>
+                         <div className="text-xl font-bold">{gameState.stats.satisfaction}</div>
+                    </div>
+                     <div>
+                         <div className="text-xs uppercase text-stone-500">资源</div>
+                         <div className="text-xl font-bold">{gameState.stats.resources}</div>
+                    </div>
+                </div>
+
+                <Button onClick={startGame} variant="danger" className="w-full py-4 text-lg">
+                    不服！重开！
+                </Button>
+            </div>
+        </div>
+    </div>
+  );
 
   const renderDashboard = () => (
     <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8">
@@ -611,7 +702,7 @@ export default function App() {
                  <div className="font-serif italic text-stone-500">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <Button onClick={advanceYear} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="w-32">
+                 <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="w-32">
                     {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
                  </Button>
             </div>
@@ -711,7 +802,7 @@ export default function App() {
         <div className="min-h-screen bg-stone-800 text-stone-100 p-4 flex items-center justify-center">
              <div className="max-w-2xl w-full space-y-8 animate-in zoom-in duration-500">
                 <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-serif text-stone-400">生涯总结</h2>
+                    <h2 className="text-2xl font-serif text-stone-400">光荣退休</h2>
                     <h1 className="text-5xl font-bold text-white mb-6">{title}</h1>
                     <p className="text-xl text-stone-300 italic">{desc}</p>
                 </div>
@@ -750,6 +841,7 @@ export default function App() {
       {gameState.phase === 'MENU' && renderMenu()}
       {gameState.phase === 'CREATION' && renderCreation()}
       {(gameState.phase === 'PLAYING' || gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY') && renderDashboard()}
+      {gameState.phase === 'GAMEOVER' && renderGameOver()}
       {gameState.phase === 'ENDING' && renderEnding()}
     </>
   );

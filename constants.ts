@@ -48,7 +48,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: '经费燃烧者',
     description: '累计遭遇 3 次经费不足或审计危机（资源 < 3）。',
     condition: (state: GameState) => state.stats.resources < 3,
-    reward: { academic: 1 }, // 穷得只剩学术了
+    reward: { academic: 1 },
     unlocked: false
   },
   {
@@ -326,6 +326,40 @@ const RISK_EVENTS: GameEvent[] = [
       { text: '全院通报批评，整改', description: '停工三个月，损失惨重。', effect: () => ({ academic: -2, resources: -2 }) },
       { text: '瞒报，私下处理', description: '风险极大，每天提心吊胆。', effect: () => ({ satisfaction: -2, reputation: -2 }), setFlag: 'hidden_fire' },
       { text: '第一时间承担责任，升级安全', description: '获得了“安全标兵”反向激励。', effect: () => ({ resources: -2, reputation: 1 }) },
+    ]
+  },
+  // --- New High Risk Events ---
+  {
+    id: 'e_r4',
+    title: '【高危】数据被质疑',
+    description: '你的代表作被国外打假网站PubPeer挂了，质疑图片重复使用。',
+    category: 'risk',
+    choices: [
+        { text: '装死，不回应', description: '舆论发酵，学校启动调查。', effect: () => ({ reputation: -5, academic: -2 }) },
+        { text: '强行解释是“误操作”', description: '越描越黑，被同行耻笑。', effect: () => ({ reputation: -4, academic: -3 }) },
+        { text: '承认错误，主动撤稿', description: '虽然丢脸，但保住了教职。', effect: () => ({ academic: -5, reputation: -2 }) }
+    ]
+  },
+  {
+    id: 'e_r5',
+    title: '【高危】学生心理崩溃',
+    description: '一名长期被延毕的博士生在天台徘徊，情况危急。',
+    category: 'risk',
+    choices: [
+        { text: '立刻赶去现场安抚，承诺毕业', description: '人救下来了，但你被家长打了一顿。', effect: () => ({ satisfaction: 5, reputation: -2 }) },
+        { text: '报警，让专业人士处理', description: '安全处理，但被学生贴上了“冷血”标签。', effect: () => ({ satisfaction: -5, reputation: -1 }) },
+        { text: '怕担责任，躲起来', description: '悲剧发生，你被千夫所指。', effect: () => ({ satisfaction: -20, reputation: -20 }) } // Instant Game Over
+    ]
+  },
+  {
+    id: 'e_r6',
+    title: '【高危】科研经费断裂',
+    description: '由于连续两年没申到项目，实验室账户余额不足以支付学生补助。',
+    category: 'risk',
+    choices: [
+        { text: '自掏腰包，卖房养学生', description: '学生感动，但你破产了。', effect: () => ({ resources: -4, satisfaction: 3 }) },
+        { text: '停发补助', description: '学生集体罢工，实验室瘫痪。', effect: () => ({ satisfaction: -10, academic: -3 }) },
+        { text: '到处借钱，拆东墙补西墙', description: '勉强维持，但信用破产。', effect: () => ({ resources: -3, reputation: -2 }) }
     ]
   }
 ];

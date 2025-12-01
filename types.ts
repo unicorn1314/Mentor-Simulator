@@ -37,7 +37,7 @@ export interface GameEvent {
 export interface LogEntry {
   year: number;
   message: string;
-  type: 'event' | 'achievement' | 'milestone' | 'risk';
+  type: 'event' | 'achievement' | 'milestone' | 'risk' | 'gameover';
 }
 
 export interface EventResult {
@@ -68,7 +68,7 @@ export interface GameState {
   stats: Stats;
   traits: Trait[];
   history: LogEntry[];
-  phase: 'MENU' | 'CREATION' | 'PLAYING' | 'EVENT' | 'RESULT' | 'SUMMARY' | 'ENDING';
+  phase: 'MENU' | 'CREATION' | 'PLAYING' | 'EVENT' | 'RESULT' | 'SUMMARY' | 'ENDING' | 'GAMEOVER';
   currentEvent: GameEvent | null;
   lastEventResult: EventResult | null;
   studentCount: number; // Keep for legacy/total count
@@ -76,4 +76,5 @@ export interface GameState {
   achievements: string[]; // IDs of unlocked achievements
   flags: Record<string, boolean>; // For chain events
   isGameOver: boolean;
+  gameOverReason?: string;
 }

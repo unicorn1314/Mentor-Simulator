@@ -1,4 +1,3 @@
-
 import { GameEvent, Trait, Achievement, GameState } from './types';
 
 // --- Traits ---
@@ -80,7 +79,7 @@ const ACADEMIC_EVENTS: GameEvent[] = [
     description: '你和学生辛苦一年的论文收到了 Nature 子刊的修回意见（Major Revision），审稿人非常刁钻。',
     category: 'academic',
     choices: [
-      { text: '亲自操刀，通宵修改', description: '论文顺利接收，但身体被掏空。', effect: () => ({ academic: 3, satisfaction: 1 }) },
+      { text: '亲自操刀，通宵修改', description: '论文顺利接收，但你因过度劳累晕倒在办公室。', effect: () => ({ academic: 3, satisfaction: 1 }), setFlag: 'health_strain' },
       { text: '指导学生修改，锻炼他们', description: '学生压力山大，但最终接收了。', effect: () => ({ academic: 2, satisfaction: -1 }) },
       { text: '太麻烦了，改投低一档期刊', description: '轻松接收，但影响力下降。', effect: () => ({ academic: 1, reputation: -1 }) },
     ]
@@ -120,13 +119,13 @@ const ACADEMIC_EVENTS: GameEvent[] = [
   },
   {
     id: 'e_a5',
-    title: '新设备采购',
-    description: '实验室需要采购一台昂贵的高精尖仪器。',
+    title: '专业软件采购',
+    description: '实验室急需一套昂贵的专业模拟软件，正版授权费高达20万。',
     category: 'academic',
     choices: [
-      { text: '买！用最好的！', description: '数据质量提升，但经费见底。', effect: () => ({ academic: 2, resources: -3 }) },
-      { text: '买个国产平替', description: '性价比高，支持国货。', effect: () => ({ academic: 1, resources: -1, reputation: 1 }) },
-      { text: '去蹭隔壁课题组的设备', description: '省钱了，但隔壁老师经常翻白眼。', effect: () => ({ resources: 1, reputation: -2 }) },
+      { text: '咬牙买正版', description: '经费大出血，但用着踏实。', effect: () => ({ academic: 2, resources: -3 }) },
+      { text: '让学生去找破解版', description: '省了一大笔钱，学生们很开心。', effect: () => ({ resources: 1, academic: 1 }), setFlag: 'pirated_software' },
+      { text: '寻找开源替代品', description: '功能差了点，凑合用吧。', effect: () => ({ academic: 0 }) },
     ]
   },
   {
@@ -287,7 +286,7 @@ const RESOURCE_EVENTS: GameEvent[] = [
     description: '因为一项研究成果，电视台想采访你。',
     category: 'network',
     choices: [
-      { text: '配合宣传，打造网红学者', description: '知名度暴涨，争议也随之而来。', effect: () => ({ reputation: 3, academic: -1 }) },
+      { text: '配合宣传，打造网红学者', description: '知名度暴涨，争议也随之而来。', effect: () => ({ reputation: 3, academic: -1 }), setFlag: 'media_exposure' },
       { text: '低调拒绝', description: '保持神秘感。', effect: () => ({ academic: 1 }) },
       { text: '让学生代表去', description: '学生火了。', effect: () => ({ satisfaction: 2 }) },
     ]
@@ -410,6 +409,39 @@ const CHAIN_EVENTS: GameEvent[] = [
     condition: (stats, traits, sc, flags) => !!flags['audit_watch'],
     choices: [
         { text: '上交违规资金', description: '多年积蓄一空。', effect: () => ({ resources: -10 }) }
+    ]
+  },
+  {
+    id: 'ce_3',
+    title: '版权律师函（连锁风险）',
+    description: '软件公司发现了你们实验室长期使用盗版软件，发来了律师函。',
+    category: 'risk',
+    condition: (stats, traits, sc, flags) => !!flags['pirated_software'],
+    choices: [
+        { text: '赔偿巨额罚款', description: '经费彻底见底。', effect: () => ({ resources: -5, reputation: -2 }) },
+        { text: '死不承认', description: '被起诉，事情闹大。', effect: () => ({ reputation: -5, academic: -2 }) }
+    ]
+  },
+  {
+    id: 'ce_4',
+    title: '网络暴力（连锁风险）',
+    description: '作为网红学者，你的一言一行都被放大，网友断章取义攻击你。',
+    category: 'risk',
+    condition: (stats, traits, sc, flags) => !!flags['media_exposure'],
+    choices: [
+        { text: '注销账号，退网保平安', description: '回归平静，但少了一个发声渠道。', effect: () => ({ reputation: -1, academic: 1 }) },
+        { text: '网上对线', description: '越吵越热，严重影响教学秩序。', effect: () => ({ reputation: -2, academic: -2, satisfaction: -2 }) }
+    ]
+  },
+  {
+    id: 'ce_5',
+    title: '积劳成疾（连锁风险）',
+    description: '长期亲力亲为、通宵工作，你突然在课堂上晕倒。',
+    category: 'risk',
+    condition: (stats, traits, sc, flags) => !!flags['health_strain'],
+    choices: [
+        { text: '住院休养半年', description: '身体好转，但项目停滞。', effect: () => ({ academic: -3, resources: -1 }) },
+        { text: '打点滴坚持工作', description: '精神可嘉，但可能猝死（Game Over风险极高）。', effect: () => ({ academic: 1, satisfaction: 1, reputation: 1 }), setFlag: 'critical_health' }
     ]
   }
 ];

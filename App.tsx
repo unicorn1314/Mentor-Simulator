@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
@@ -8,7 +7,7 @@ import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHA
 
 const StatBar: React.FC<{ label: string; value: number; icon: React.ReactNode; color: string }> = ({ label, value, icon, color }) => (
   <div className="flex items-center gap-2 mb-2">
-    <div className={`p-2 rounded-lg ${color} text-white`}>{icon}</div>
+    <div className={`p-2 rounded-lg ${color} text-white shadow-sm`}>{icon}</div>
     <div className="flex-1">
       <div className="flex justify-between text-sm font-bold mb-1 text-stone-700">
         <span>{label}</span>
@@ -25,13 +24,13 @@ const StatBar: React.FC<{ label: string; value: number; icon: React.ReactNode; c
 );
 
 const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-white border-2 border-stone-200 rounded-xl shadow-[4px_4px_0px_0px_rgba(120,113,108,0.2)] p-6 ${className}`}>
+  <div className={`bg-white border-2 border-stone-200 rounded-xl shadow-[4px_4px_0px_0px_rgba(120,113,108,0.2)] p-4 md:p-6 ${className}`}>
     {children}
   </div>
 );
 
 const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; className?: string }> = ({ onClick, children, variant = 'primary', disabled = false, className = '' }) => {
-  const baseStyle = "px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 border-2 flex justify-center items-center gap-2";
+  const baseStyle = "px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 border-2 flex justify-center items-center gap-2 select-none";
   const variants = {
     primary: "bg-stone-800 text-white border-stone-800 hover:bg-stone-700 disabled:bg-stone-400 disabled:border-stone-400",
     secondary: "bg-white text-stone-800 border-stone-300 hover:bg-stone-50 disabled:text-stone-400",
@@ -150,7 +149,8 @@ export default function App() {
       e.condition && e.condition(stats, traitIds, studentCount, flags)
     );
     
-    if (chainTrigger && Math.random() < 0.6) { // 60% chance for chain events
+    // Higher chance for chain events if conditions are met
+    if (chainTrigger && Math.random() < 0.7) { 
       setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: chainTrigger }));
       return;
     }
@@ -405,20 +405,20 @@ export default function App() {
 
   const renderMenu = () => (
     <div className="flex flex-col items-center justify-center min-h-screen bg-stone-100 p-4">
-      <div className="max-w-2xl w-full text-center space-y-8">
+      <div className="max-w-2xl w-full text-center space-y-8 animate-in fade-in duration-700">
         <div className="mb-8">
-            <h1 className="text-6xl font-bold text-stone-800 serif tracking-tighter mb-4">导师模拟器</h1>
-            <p className="text-xl text-stone-600 italic font-serif">Professor Simulator</p>
+            <h1 className="text-4xl md:text-6xl font-bold text-stone-800 serif tracking-tighter mb-4">导师模拟器</h1>
+            <p className="text-lg md:text-xl text-stone-600 italic font-serif">Professor Simulator</p>
         </div>
         
         <Card className="p-8 transform hover:scale-105 transition-transform duration-300 cursor-default">
-          <p className="text-lg text-stone-600 mb-6 leading-relaxed">
+          <p className="text-base md:text-lg text-stone-600 mb-6 leading-relaxed">
             你即将入职某知名高校，开启长达30年的导师生涯。<br/>
             <span className="text-red-600 font-bold">警告：属性过低可能导致直接解聘或破产！</span><br/>
             是成为学术泰斗，还是桃李满天下的教育家？<br/>
             一切由你决定。
           </p>
-          <Button onClick={startGame} className="w-full text-lg py-4">
+          <Button onClick={startGame} className="w-full text-lg py-4 shadow-lg">
             开始新的生涯
           </Button>
         </Card>
@@ -429,9 +429,9 @@ export default function App() {
   const renderCreation = () => (
     <div className="min-h-screen bg-stone-100 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full">
-        <h2 className="text-3xl font-bold mb-6 text-stone-800 serif">请选择 3 个初始特质</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-stone-800 serif text-center md:text-left">请选择 3 个初始特质</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-24 md:mb-8">
             {/* Group by category */}
             {(['professional', 'mentorship', 'workplace'] as const).map(cat => (
                 <div key={cat} className="space-y-3">
@@ -443,14 +443,14 @@ export default function App() {
                             key={trait.id}
                             onClick={() => toggleTrait(trait.id)}
                             className={`
-                                p-4 rounded-lg border-2 cursor-pointer transition-all
+                                p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all
                                 ${selectedTraits.includes(trait.id) 
                                     ? 'bg-stone-800 border-stone-800 text-white shadow-lg scale-105' 
                                     : 'bg-white border-stone-200 text-stone-600 hover:border-stone-400'}
                                 ${selectedTraits.length >= 3 && !selectedTraits.includes(trait.id) ? 'opacity-50 cursor-not-allowed' : ''}
                             `}
                         >
-                            <div className="font-bold text-lg mb-1">{trait.name}</div>
+                            <div className="font-bold text-base md:text-lg mb-1">{trait.name}</div>
                             <div className="text-xs opacity-80">{trait.description}</div>
                         </div>
                     ))}
@@ -458,13 +458,15 @@ export default function App() {
             ))}
         </div>
 
-        <div className="flex justify-between items-center bg-white p-4 rounded-xl border-2 border-stone-200 sticky bottom-4 shadow-xl">
-            <div className="text-stone-600">
-                已选: <span className="font-bold text-stone-900">{selectedTraits.length}/3</span>
-            </div>
-            <Button onClick={confirmTraits} disabled={selectedTraits.length !== 3}>
-                确认入职
-            </Button>
+        <div className="fixed bottom-0 left-0 right-0 p-4 md:static bg-white/90 backdrop-blur border-t-2 border-stone-200 md:border-t-0 md:bg-transparent md:backdrop-blur-none z-10">
+          <div className="max-w-4xl mx-auto flex justify-between items-center bg-white md:p-4 rounded-xl md:border-2 md:border-stone-200 md:shadow-xl">
+              <div className="text-stone-600">
+                  已选: <span className="font-bold text-stone-900">{selectedTraits.length}/3</span>
+              </div>
+              <Button onClick={confirmTraits} disabled={selectedTraits.length !== 3}>
+                  确认入职
+              </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -483,24 +485,24 @@ export default function App() {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className={`max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${category === 'risk' ? 'border-red-600' : 'border-stone-800'} animate-in fade-in zoom-in duration-300`}>
-                <div className={`${category === 'risk' ? 'bg-red-50' : 'bg-stone-100'} p-6 border-b border-stone-200 flex items-center gap-3`}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
+            <div className={`relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${category === 'risk' ? 'border-red-600' : 'border-stone-800'} animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col`}>
+                <div className={`${category === 'risk' ? 'bg-red-50' : 'bg-stone-100'} p-6 border-b border-stone-200 flex items-center gap-3 flex-shrink-0`}>
                    {categoryIcons[category]}
                    <span className={`font-bold uppercase tracking-widest text-sm ${category === 'risk' ? 'text-red-600' : 'text-stone-500'}`}>
                        {category === 'academic' ? '学术科研' : category === 'student' ? '学生指导' : category === 'career' ? '职场发展' : category === 'network' ? '人脉资源' : '高危风险事件'}
                    </span>
                 </div>
-                <div className="p-8">
-                    <h3 className="text-3xl font-bold mb-4 serif text-stone-900">{title}</h3>
-                    <p className="text-lg text-stone-700 leading-relaxed mb-8">{description}</p>
+                <div className="p-6 md:p-8 overflow-y-auto">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-4 serif text-stone-900">{title}</h3>
+                    <p className="text-base md:text-lg text-stone-700 leading-relaxed mb-8">{description}</p>
                     
                     <div className="space-y-3">
                         {choices.map((choice, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => handleChoice(choice.effect, choice.text, choice.description, choice.setFlag)}
-                                className="w-full text-left p-4 rounded-lg border-2 border-stone-200 hover:border-stone-800 hover:bg-stone-50 transition-all group"
+                                className="w-full text-left p-4 rounded-lg border-2 border-stone-200 hover:border-stone-800 hover:bg-stone-50 transition-all group active:bg-stone-100"
                             >
                                 <span className="font-bold text-stone-800 block mb-1 group-hover:translate-x-1 transition-transform">➢ {choice.text}</span>
                                 {gameState.traits.some(t => t.id === 't3') && ( // Example of trait aiding player
@@ -521,14 +523,14 @@ export default function App() {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-stone-800 animate-in fade-in zoom-in duration-300">
-                <div className="bg-stone-100 p-4 border-b border-stone-200 text-center">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-stone-800 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+                <div className="bg-stone-100 p-4 border-b border-stone-200 text-center sticky top-0">
                    <h3 className="font-bold text-stone-600 flex items-center justify-center gap-2">
                        <CheckCircle2 size={18} /> 事件结果
                    </h3>
                 </div>
-                <div className="p-8 text-center">
-                    <p className="text-xl text-stone-800 mb-8 font-serif leading-relaxed">{text}</p>
+                <div className="p-6 md:p-8 text-center">
+                    <p className="text-lg md:text-xl text-stone-800 mb-8 font-serif leading-relaxed">{text}</p>
                     
                     {Object.keys(changes).length > 0 && (
                         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -562,12 +564,12 @@ export default function App() {
 
       return (
         <div className="fixed inset-0 bg-stone-900/80 flex items-center justify-center p-4 z-50 backdrop-blur-md">
-            <div className="max-w-2xl w-full bg-stone-50 rounded-lg shadow-2xl overflow-hidden border-2 border-stone-600 animate-in slide-in-from-bottom duration-500">
-                <div className="bg-stone-800 text-white p-6 text-center">
-                    <h2 className="text-3xl font-serif font-bold mb-2">第 {gameState.year} 年 · 阶段总结</h2>
+            <div className="max-w-2xl w-full bg-stone-50 rounded-lg shadow-2xl overflow-hidden border-2 border-stone-600 animate-in slide-in-from-bottom duration-500 max-h-[95vh] overflow-y-auto">
+                <div className="bg-stone-800 text-white p-6 text-center sticky top-0 z-10">
+                    <h2 className="text-2xl md:text-3xl font-serif font-bold mb-2">第 {gameState.year} 年 · 阶段总结</h2>
                     <div className="text-amber-400 font-bold uppercase tracking-widest">{evaluation.title}</div>
                 </div>
-                <div className="p-8">
+                <div className="p-6 md:p-8">
                     <p className="text-center text-stone-600 italic mb-8 border-b pb-4">"{evaluation.desc}"</p>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center">
@@ -601,11 +603,11 @@ export default function App() {
         <div className="max-w-2xl w-full bg-stone-900 rounded-2xl shadow-2xl p-8 border-4 border-red-700 animate-in zoom-in duration-500">
             <div className="text-center space-y-4">
                 <Skull size={64} className="mx-auto text-red-600 mb-4" />
-                <h1 className="text-5xl font-bold text-white mb-2">生涯终结</h1>
-                <p className="text-2xl text-red-400 font-serif font-bold">{gameState.gameOverReason}</p>
+                <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">生涯终结</h1>
+                <p className="text-xl md:text-2xl text-red-400 font-serif font-bold">{gameState.gameOverReason}</p>
                 <p className="text-stone-400">坚持了 {gameState.year} 年，倒在了退休前夕。</p>
                 
-                <div className="py-8 grid grid-cols-4 gap-4 text-center">
+                <div className="py-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
                          <div className="text-xs uppercase text-stone-500">学术</div>
                          <div className="text-xl font-bold">{gameState.stats.academic}</div>
@@ -633,15 +635,15 @@ export default function App() {
   );
 
   const renderDashboard = () => (
-    <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8">
+    <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden">
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Left Column: Stats */}
-        <div className="md:col-span-4 space-y-6">
-            <Card className="sticky top-6">
+        <div className="md:col-span-4 space-y-6 relative">
+            <Card className="md:sticky md:top-6">
                 <div className="mb-6 flex items-center justify-between border-b border-stone-100 pb-4">
-                    <h2 className="text-2xl font-bold serif">第 {gameState.year} 年</h2>
-                    <span className="text-sm font-bold bg-stone-200 px-2 py-1 rounded text-stone-600">距离退休: {RETIREMENT_YEAR - gameState.year + 1}年</span>
+                    <h2 className="text-xl md:text-2xl font-bold serif">第 {gameState.year} 年</h2>
+                    <span className="text-xs md:text-sm font-bold bg-stone-200 px-2 py-1 rounded text-stone-600">距离退休: {RETIREMENT_YEAR - gameState.year + 1}年</span>
                 </div>
 
                 <StatBar label="学术造诣" value={gameState.stats.academic} icon={<BookOpen size={18} />} color="bg-blue-600" />
@@ -678,8 +680,8 @@ export default function App() {
                 )}
             </Card>
 
-            <div className="hidden md:block">
-                 <h3 className="font-bold text-stone-500 mb-2 px-2">特质 & 状态</h3>
+            <div className="block">
+                 <h3 className="font-bold text-stone-500 mb-2 px-2 text-sm">特质 & 状态</h3>
                  <div className="flex flex-wrap gap-2">
                     {gameState.traits.map(t => (
                         <span key={t.id} className="bg-white border border-stone-200 px-3 py-1 rounded-full text-xs font-bold text-stone-600 shadow-sm" title={t.description}>
@@ -698,11 +700,11 @@ export default function App() {
         {/* Right Column: Main Area */}
         <div className="md:col-span-8 flex flex-col gap-6">
             {/* Action Bar */}
-            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex justify-between items-center shadow-sm">
-                 <div className="font-serif italic text-stone-500">
+            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm gap-4">
+                 <div className="font-serif italic text-stone-500 text-center sm:text-left">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="w-32">
+                 <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="w-full sm:w-auto">
                     {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
                  </Button>
             </div>
@@ -803,26 +805,26 @@ export default function App() {
              <div className="max-w-2xl w-full space-y-8 animate-in zoom-in duration-500">
                 <div className="text-center space-y-2">
                     <h2 className="text-2xl font-serif text-stone-400">光荣退休</h2>
-                    <h1 className="text-5xl font-bold text-white mb-6">{title}</h1>
-                    <p className="text-xl text-stone-300 italic">{desc}</p>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">{title}</h1>
+                    <p className="text-lg md:text-xl text-stone-300 italic">{desc}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-stone-900">
                     <Card className="bg-stone-100">
                         <div className="text-xs uppercase text-stone-500">最终学术</div>
-                        <div className="text-3xl font-bold">{academic}/20</div>
+                        <div className="text-xl md:text-3xl font-bold">{academic}/20</div>
                     </Card>
                     <Card className="bg-stone-100">
                         <div className="text-xs uppercase text-stone-500">最终口碑</div>
-                        <div className="text-3xl font-bold">{reputation}/20</div>
+                        <div className="text-xl md:text-3xl font-bold">{reputation}/20</div>
                     </Card>
                     <Card className="bg-stone-100">
                          <div className="text-xs uppercase text-stone-500">毕业学生</div>
-                         <div className="text-3xl font-bold">{graduatedCount}人</div>
+                         <div className="text-xl md:text-3xl font-bold">{graduatedCount}人</div>
                     </Card>
                     <Card className="bg-stone-100">
                          <div className="text-xs uppercase text-stone-500">达成成就</div>
-                         <div className="text-3xl font-bold">{gameState.achievements.length}个</div>
+                         <div className="text-xl md:text-3xl font-bold">{gameState.achievements.length}个</div>
                     </Card>
                 </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull } from 'lucide-react';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
 import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS } from './constants';
 
@@ -29,12 +29,13 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ chi
   </div>
 );
 
-const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; className?: string }> = ({ onClick, children, variant = 'primary', disabled = false, className = '' }) => {
+const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant?: 'primary' | 'secondary' | 'danger' | 'success'; disabled?: boolean; className?: string }> = ({ onClick, children, variant = 'primary', disabled = false, className = '' }) => {
   const baseStyle = "px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 border-2 flex justify-center items-center gap-2 select-none";
   const variants = {
     primary: "bg-stone-800 text-white border-stone-800 hover:bg-stone-700 disabled:bg-stone-400 disabled:border-stone-400",
     secondary: "bg-white text-stone-800 border-stone-300 hover:bg-stone-50 disabled:text-stone-400",
     danger: "bg-red-600 text-white border-red-700 hover:bg-red-500",
+    success: "bg-amber-500 text-white border-amber-600 hover:bg-amber-400",
   };
   
   return (
@@ -611,41 +612,73 @@ export default function App() {
       );
   };
 
-  const renderGameOver = () => (
-    <div className="min-h-screen bg-red-900 text-stone-100 p-4 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-stone-900 rounded-2xl shadow-2xl p-8 border-4 border-red-700 animate-in zoom-in duration-500">
-            <div className="text-center space-y-4">
-                <Skull size={64} className="mx-auto text-red-600 mb-4" />
-                <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">生涯终结</h1>
-                <p className="text-xl md:text-2xl text-red-400 font-serif font-bold">{gameState.gameOverReason}</p>
-                <p className="text-stone-400">坚持了 {gameState.year} 年，倒在了退休前夕。</p>
-                
-                <div className="py-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                         <div className="text-xs uppercase text-stone-500">学术</div>
-                         <div className="text-xl font-bold">{gameState.stats.academic}</div>
-                    </div>
-                    <div>
-                         <div className="text-xs uppercase text-stone-500">口碑</div>
-                         <div className="text-xl font-bold">{gameState.stats.reputation}</div>
-                    </div>
-                     <div>
-                         <div className="text-xs uppercase text-stone-500">学生</div>
-                         <div className="text-xl font-bold">{gameState.stats.satisfaction}</div>
-                    </div>
-                     <div>
-                         <div className="text-xs uppercase text-stone-500">资源</div>
-                         <div className="text-xl font-bold">{gameState.stats.resources}</div>
-                    </div>
-                </div>
+  const renderGameOver = () => {
+    // Determine if it is a success (Retirement) or failure
+    const isSuccess = gameState.gameOverReason?.includes('光荣退休');
 
-                <Button onClick={startGame} variant="danger" className="w-full py-4 text-lg">
-                    不服！重开！
-                </Button>
-            </div>
-        </div>
-    </div>
-  );
+    return (
+      <div className={`min-h-screen p-4 flex items-center justify-center ${isSuccess ? 'bg-amber-50' : 'bg-red-900'}`}>
+          <div className={`max-w-2xl w-full rounded-2xl shadow-2xl p-8 border-4 animate-in zoom-in duration-500 ${isSuccess ? 'bg-white border-amber-500 text-stone-800' : 'bg-stone-900 border-red-700 text-stone-100'}`}>
+              <div className="text-center space-y-4">
+                  {isSuccess ? (
+                      <div className="mx-auto bg-amber-100 p-4 rounded-full w-24 h-24 flex items-center justify-center mb-4">
+                        <Trophy size={48} className="text-amber-500" />
+                      </div>
+                  ) : (
+                      <div className="mx-auto bg-red-900/50 p-4 rounded-full w-24 h-24 flex items-center justify-center mb-4">
+                        <Skull size={48} className="text-red-500" />
+                      </div>
+                  )}
+                  
+                  <h1 className="text-3xl md:text-5xl font-bold mb-2 font-serif">
+                      {isSuccess ? '功成身退' : '生涯终结'}
+                  </h1>
+                  
+                  <p className={`text-xl md:text-2xl font-serif font-bold ${isSuccess ? 'text-amber-600' : 'text-red-400'}`}>
+                      {gameState.gameOverReason}
+                  </p>
+                  
+                  <p className={isSuccess ? 'text-stone-500' : 'text-stone-400'}>
+                      {isSuccess 
+                        ? `你奉献了 ${gameState.year} 年青春，桃李满天下，为学术界留下了浓墨重彩的一笔。` 
+                        : `坚持了 ${gameState.year} 年，倒在了退休前夕。`
+                      }
+                  </p>
+                  
+                  <div className={`py-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center border-t border-b ${isSuccess ? 'border-stone-100' : 'border-stone-800'} my-6`}>
+                      <div>
+                           <div className={`text-xs uppercase ${isSuccess ? 'text-stone-400' : 'text-stone-500'}`}>学术</div>
+                           <div className="text-xl font-bold">{gameState.stats.academic}</div>
+                      </div>
+                      <div>
+                           <div className={`text-xs uppercase ${isSuccess ? 'text-stone-400' : 'text-stone-500'}`}>口碑</div>
+                           <div className="text-xl font-bold">{gameState.stats.reputation}</div>
+                      </div>
+                       <div>
+                           <div className={`text-xs uppercase ${isSuccess ? 'text-stone-400' : 'text-stone-500'}`}>学生</div>
+                           <div className="text-xl font-bold">{gameState.stats.satisfaction}</div>
+                      </div>
+                       <div>
+                           <div className={`text-xs uppercase ${isSuccess ? 'text-stone-400' : 'text-stone-500'}`}>资源</div>
+                           <div className="text-xl font-bold">{gameState.stats.resources}</div>
+                      </div>
+                  </div>
+
+                  <div className="space-y-3">
+                      <Button onClick={startGame} variant={isSuccess ? 'success' : 'danger'} className="w-full py-4 text-lg">
+                          {isSuccess ? '开启第二人生 (重开)' : '不服！重开！'}
+                      </Button>
+                      {isSuccess && (
+                          <div className="text-sm text-stone-400 pt-2">
+                              感谢游玩！期待你的下一个学术巅峰。
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      </div>
+    );
+  };
 
   const renderDashboard = () => (
     <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden">

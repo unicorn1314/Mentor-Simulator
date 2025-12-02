@@ -1,3 +1,4 @@
+
 import { GameEvent, Trait, Achievement, GameState } from './types';
 
 // --- Traits (保持原有不变) ---
@@ -70,7 +71,7 @@ export const PHASE_EVALUATIONS = [
   { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，站好最后一班岗。' }
 ];
 
-// --- Events Library (大幅扩充) ---
+// --- Events Library ---
 
 const ACADEMIC_EVENTS: GameEvent[] = [
   {
@@ -733,17 +734,17 @@ const HIDDEN_EVENTS: GameEvent[] = [
   }
 ];
 
-// Chain Events (Triggered by Flags) (保持原有不变)
+// Chain Events (Triggered by Flags)
 const CHAIN_EVENTS: GameEvent[] = [
   {
     id: 'ce_1',
     title: '陈年旧账（连锁风险）',
     description: '之前暗示学生送礼的事情被发到了网上，舆论哗然！',
     category: 'risk',
-    condition: (stats, traits, sc, flags) => !!flags['accepted_bribe'],
+    condition: (stats, traits, sc, flags) => !!flags['accepted_bribe'] && !flags['bribe_processed'],
     choices: [
-        { text: '沉默装死', description: '被学校停职反省一年。', effect: () => ({ reputation: -5, academic: -2, resources: -2 }) },
-        { text: '辩解是学生自愿的', description: '越描越黑。', effect: () => ({ reputation: -8, satisfaction: -3 }) }
+        { text: '沉默装死', description: '被学校停职反省一年。', effect: () => ({ reputation: -5, academic: -2, resources: -2 }), setFlag: 'bribe_processed' },
+        { text: '辩解是学生自愿的', description: '越描越黑。', effect: () => ({ reputation: -8, satisfaction: -3 }), setFlag: 'bribe_processed' }
     ]
   },
   {
@@ -753,7 +754,7 @@ const CHAIN_EVENTS: GameEvent[] = [
     category: 'risk',
     condition: (stats, traits, sc, flags) => !!flags['audit_watch'],
     choices: [
-        { text: '上交违规资金', description: '多年积蓄一空。', effect: () => ({ resources: -10 }) }
+        { text: '上交违规资金', description: '多年积蓄一空，但审计组撤走了。', effect: () => ({ resources: -10 }), removeFlag: 'audit_watch' }
     ]
   },
   {
@@ -761,10 +762,10 @@ const CHAIN_EVENTS: GameEvent[] = [
     title: '版权律师函（连锁风险）',
     description: '软件公司发现了你们实验室长期使用盗版软件，发来了律师函。',
     category: 'risk',
-    condition: (stats, traits, sc, flags) => !!flags['pirated_software'],
+    condition: (stats, traits, sc, flags) => !!flags['pirated_software'] && !flags['software_judged'],
     choices: [
-        { text: '赔偿巨额罚款', description: '经费彻底见底。', effect: () => ({ resources: -5, reputation: -2 }) },
-        { text: '死不承认', description: '被起诉，事情闹大。', effect: () => ({ reputation: -5, academic: -2 }) }
+        { text: '赔偿巨额罚款', description: '经费彻底见底。', effect: () => ({ resources: -5, reputation: -2 }), removeFlag: 'pirated_software', setFlag: 'software_judged' },
+        { text: '死不承认', description: '被起诉，事情闹大。', effect: () => ({ reputation: -5, academic: -2 }), removeFlag: 'pirated_software', setFlag: 'software_judged' }
     ]
   },
   {
@@ -774,7 +775,7 @@ const CHAIN_EVENTS: GameEvent[] = [
     category: 'risk',
     condition: (stats, traits, sc, flags) => !!flags['media_exposure'],
     choices: [
-        { text: '注销账号，退网保平安', description: '回归平静，但少了一个发声渠道。', effect: () => ({ reputation: -1, academic: 1 }) },
+        { text: '注销账号，退网保平安', description: '回归平静，但少了一个发声渠道。', effect: () => ({ reputation: -1, academic: 1 }), removeFlag: 'media_exposure' },
         { text: '网上对线', description: '越吵越热，严重影响教学秩序。', effect: () => ({ reputation: -2, academic: -2, satisfaction: -2 }) }
     ]
   },
@@ -785,8 +786,18 @@ const CHAIN_EVENTS: GameEvent[] = [
     category: 'risk',
     condition: (stats, traits, sc, flags) => !!flags['health_strain'],
     choices: [
-        { text: '住院休养半年', description: '身体好转，但项目停滞。', effect: () => ({ academic: -3, resources: -1 }) },
-        { text: '打点滴坚持工作', description: '精神可嘉，但可能猝死（Game Over风险极高）。', effect: () => ({ academic: 1, satisfaction: 1, reputation: 1 }), setFlag: 'critical_health' }
+        { text: '住院休养半年', description: '身体好转，但项目停滞。', effect: () => ({ academic: -3, resources: -1 }), removeFlag: 'health_strain' },
+        { text: '打点滴坚持工作', description: '精神可嘉，但医生下了病危通知书。', effect: () => ({ academic: 1, satisfaction: 1, reputation: 1 }), removeFlag: 'health_strain', setFlag: 'critical_health' }
+    ]
+  },
+  {
+    id: 'ce_6',
+    title: '突发恶疾（连锁风险）',
+    description: '因为之前的带病工作，你的身体终于支撑不住了，倒在了实验台前。',
+    category: 'risk',
+    condition: (stats, traits, sc, flags) => !!flags['critical_health'],
+    choices: [
+        { text: '抢救...', description: 'ICU 住了三个月，虽然捡回一条命，但学术生涯基本结束了。', effect: () => ({ academic: -10, resources: -10, satisfaction: -10, reputation: -10 }), removeFlag: 'critical_health' }
     ]
   }
 ];

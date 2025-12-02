@@ -220,8 +220,18 @@ export default function App() {
   };
 
   const advanceYear = (bypassSummary = false) => {
-    if (gameState.year >= RETIREMENT_YEAR || gameState.isGameOver) {
-      setGameState(prev => ({ ...prev, phase: 'ENDING' }));
+    if (gameState.year >= RETIREMENT_YEAR) {
+      setGameState(prev => ({ 
+        ...prev, 
+        phase: 'GAMEOVER',
+        isGameOver: true,
+        gameOverReason: '【光荣退休】三十年教学生涯圆满结束，你培养了无数优秀人才。'
+      }));
+      return;
+    }
+
+    if (gameState.isGameOver) {
+      setGameState(prev => ({ ...prev, phase: 'GAMEOVER' }));
       return;
     }
 
@@ -325,7 +335,7 @@ export default function App() {
     }, 500);
   };
 
-  const handleChoice = (effect: (s: Stats) => Partial<Stats>, choiceText: string, resultText?: string, setFlag?: string) => {
+  const handleChoice = (effect: (s: Stats) => Partial<Stats>, choiceText: string, resultText?: string, setFlag?: string, removeFlag?: string) => {
     const changes = effect(gameState.stats);
     
     // Apply changes without clamping min to 0 initially to catch game over
@@ -339,6 +349,9 @@ export default function App() {
     const newFlags = { ...gameState.flags };
     if (setFlag) {
         newFlags[setFlag] = true;
+    }
+    if (removeFlag) {
+        delete newFlags[removeFlag];
     }
 
     // Check Game Over
@@ -501,7 +514,7 @@ export default function App() {
                         {choices.map((choice, idx) => (
                             <button
                                 key={idx}
-                                onClick={() => handleChoice(choice.effect, choice.text, choice.description, choice.setFlag)}
+                                onClick={() => handleChoice(choice.effect, choice.text, choice.description, choice.setFlag, choice.removeFlag)}
                                 className="w-full text-left p-4 rounded-lg border-2 border-stone-200 hover:border-stone-800 hover:bg-stone-50 transition-all group active:bg-stone-100"
                             >
                                 <span className="font-bold text-stone-800 block mb-1 group-hover:translate-x-1 transition-transform">➢ {choice.text}</span>
@@ -775,76 +788,12 @@ export default function App() {
     </div>
   );
 
-  const renderEnding = () => {
-    // Determine ending title based on max stat
-    const { academic, reputation, satisfaction, resources } = gameState.stats;
-    let title = "平凡的退休教师";
-    let desc = "你勤勤恳恳工作了一辈子，虽然没有惊天动地的成就，但也对得起这份职业。";
-
-    if (academic >= 18) {
-        title = "学界泰斗";
-        desc = "你的名字写在教科书里，虽然头发掉光了，但你的理论照亮了行业。";
-    } else if (reputation >= 18) {
-        title = "德高望重";
-        desc = "无论走到哪里，都有人尊称你一声“先生”。";
-    } else if (satisfaction >= 18) {
-        title = "学生慈父/慈母";
-        desc = "你的办公室永远堆满了毕业学生寄来的土特产。";
-    } else if (resources >= 18) {
-        title = "资源大鳄";
-        desc = "你不仅是教授，更是产学研结合的商业领袖。";
-    } else if (academic < 5 && reputation < 5) {
-        title = "差点被解聘";
-        desc = "能混到退休也是一种本事。";
-    }
-
-    const graduatedCount = gameState.students.filter(s => s.status === 'graduated').length;
-
-    return (
-        <div className="min-h-screen bg-stone-800 text-stone-100 p-4 flex items-center justify-center">
-             <div className="max-w-2xl w-full space-y-8 animate-in zoom-in duration-500">
-                <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-serif text-stone-400">光荣退休</h2>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">{title}</h1>
-                    <p className="text-lg md:text-xl text-stone-300 italic">{desc}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-stone-900">
-                    <Card className="bg-stone-100">
-                        <div className="text-xs uppercase text-stone-500">最终学术</div>
-                        <div className="text-xl md:text-3xl font-bold">{academic}/20</div>
-                    </Card>
-                    <Card className="bg-stone-100">
-                        <div className="text-xs uppercase text-stone-500">最终口碑</div>
-                        <div className="text-xl md:text-3xl font-bold">{reputation}/20</div>
-                    </Card>
-                    <Card className="bg-stone-100">
-                         <div className="text-xs uppercase text-stone-500">毕业学生</div>
-                         <div className="text-xl md:text-3xl font-bold">{graduatedCount}人</div>
-                    </Card>
-                    <Card className="bg-stone-100">
-                         <div className="text-xs uppercase text-stone-500">达成成就</div>
-                         <div className="text-xl md:text-3xl font-bold">{gameState.achievements.length}个</div>
-                    </Card>
-                </div>
-
-                <div className="flex justify-center pt-8">
-                    <Button onClick={startGame} className="bg-white text-stone-900 hover:bg-stone-200 w-full md:w-auto px-12 py-4 text-lg">
-                        重开一局
-                    </Button>
-                </div>
-             </div>
-        </div>
-    );
-  };
-
   return (
     <>
       {gameState.phase === 'MENU' && renderMenu()}
       {gameState.phase === 'CREATION' && renderCreation()}
       {(gameState.phase === 'PLAYING' || gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY') && renderDashboard()}
-      {gameState.phase === 'GAMEOVER' && renderGameOver()}
-      {gameState.phase === 'ENDING' && renderEnding()}
+      {(gameState.phase === 'GAMEOVER' || gameState.phase === 'ENDING') && renderGameOver()}
     </>
   );
 }

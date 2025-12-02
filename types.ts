@@ -23,6 +23,7 @@ export interface Choice {
   description?: string; // Result text
   effect: (stats: Stats) => Partial<Stats>; // Returns the changes
   setFlag?: string; // Sets a flag for chain events
+  removeFlag?: string; // Removes a flag (fixes infinite loops)
 }
 
 export interface GameEvent {

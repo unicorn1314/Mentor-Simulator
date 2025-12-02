@@ -1,6 +1,6 @@
 import { GameEvent, Trait, Achievement, GameState } from './types';
 
-// --- Traits ---
+// --- Traits (保持原有不变) ---
 export const TRAITS: Trait[] = [
   // Professional
   { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 3, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) },
@@ -24,7 +24,7 @@ export const TRAITS: Trait[] = [
   { id: 't15', name: '独行侠', category: 'workplace', description: '不站队，不混圈，全靠实力说话。', effect: (s) => ({ ...s, resources: s.resources - 2, academic: s.academic + 2 }) },
 ];
 
-// --- Achievements ---
+// --- Achievements (保持原有不变) ---
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'ach_1',
@@ -60,7 +60,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   }
 ];
 
-// --- Phase Evaluations ---
+// --- Phase Evaluations (保持原有不变) ---
 export const PHASE_EVALUATIONS = [
   { minYear: 1, maxYear: 5, title: '青椒生存期', desc: '在非升即走的压力下摸爬滚打。' },
   { minYear: 6, maxYear: 10, title: '骨干成长期', desc: '逐渐站稳脚跟，开始建立自己的小团队。' },
@@ -70,7 +70,7 @@ export const PHASE_EVALUATIONS = [
   { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，站好最后一班岗。' }
 ];
 
-// --- Events Library ---
+// --- Events Library (大幅扩充) ---
 
 const ACADEMIC_EVENTS: GameEvent[] = [
   {
@@ -170,6 +170,62 @@ const ACADEMIC_EVENTS: GameEvent[] = [
       { text: '封建迷信！严厉批评', description: '实验还是不顺，大家士气低落。', effect: () => ({ satisfaction: -1 }) },
       { text: '偷偷转发朋友圈，仅自己可见', description: '心理得到了安慰，好像运气变好了？', effect: () => ({ academic: 1 }) },
       { text: '带头去寺庙祈福', description: '全组团建活动变成了烧香，大家很开心。', effect: () => ({ satisfaction: 2, reputation: -1 }) }
+    ]
+  },
+  // --- New Added Academic ---
+  {
+    id: 'e_a_new4',
+    title: '天使审稿人',
+    description: 'Reviewer #3 发回意见：Accept as is（直接接收）。你怀疑自己还在做梦。',
+    category: 'academic',
+    choices: [
+      { text: '赶紧回复确认，免得他反悔', description: '天上掉馅饼，文章顺利发表。', effect: () => ({ academic: 2, satisfaction: 1 }) },
+      { text: '觉得不真实，主动检查一遍', description: '发现了一个重大错别字，避免了尴尬。', effect: () => ({ academic: 1, reputation: 1 }) },
+      { text: '截图发朋友圈炫耀', description: '收获了100个赞和同行的嫉妒。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_a_new5',
+    title: '超低温冰箱故障',
+    description: '凌晨两点，实验室 -80℃ 冰箱报警，里面存着十年的珍贵菌种。',
+    category: 'academic',
+    choices: [
+      { text: '穿着睡衣狂奔回实验室抢救', description: '样品保住了，但你感冒了。', effect: () => ({ resources: -1, academic: 0 }) },
+      { text: '电话摇醒住在旁边的学生', description: '学生睡眼惺忪地去了，有些怨言。', effect: () => ({ satisfaction: -2 }) },
+      { text: '手机静音，听天由命', description: '样品全化了，十年的心血毁于一旦。', effect: () => ({ academic: -3 }) }
+    ]
+  },
+  {
+    id: 'e_a_new6',
+    title: '论文标题的尴尬',
+    description: '你的论文已经在线发表了，突然发现标题里有个单词拼错了（Public -> Pubic）。',
+    category: 'academic',
+    choices: [
+      { text: '联系编辑发勘误（Erratum）', description: '虽然更正了，但成了永久的黑历史。', effect: () => ({ reputation: -1 }) },
+      { text: '假装没看见', description: '被同行私下嘲笑。', effect: () => ({ reputation: -2 }) },
+      { text: '自嘲，“这是一种行为艺术”', description: '意外地被认为很幽默。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_a_new7',
+    title: '掠夺性期刊的诱惑',
+    description: '某“国际期刊”发来邀请，只要交钱，3天录用，包发。',
+    category: 'academic',
+    choices: [
+      { text: '义正言辞地拉黑', description: '维护了学术净土。', effect: () => ({ reputation: 1 }) },
+      { text: '为了凑考核指标，投一篇', description: '指标完成了，但以后这成了你的污点。', effect: () => ({ academic: 1, reputation: -3 }) },
+      { text: '推荐死对头去投', description: '死对头还真投了，你暗自窃喜。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_a_new8',
+    title: '厕所里的灵感',
+    description: '你在上厕所时突然想通了一个困扰半年的数学难题，但手边没有纸笔。',
+    category: 'academic',
+    choices: [
+      { text: '牺牲手纸，写在上面', description: '虽然有点味道，但问题解决了！', effect: () => ({ academic: 3, satisfaction: 1 }) },
+      { text: '默念一百遍冲回办公室', description: '跑到半路忘了一半。', effect: () => ({ academic: 1 }) },
+      { text: '发语音给自己', description: '被隔间的人听到了，以为你疯了。', effect: () => ({ academic: 2, reputation: -1 }) }
     ]
   }
 ];
@@ -284,6 +340,51 @@ const STUDENT_EVENTS: GameEvent[] = [
       { text: '严肃劝离，安全第一', description: '博后请假回家了，项目延期。', effect: () => ({ academic: -1, resources: -1 }) },
       { text: '教孩子用移液枪', description: '从小培养科研苗子（误）。', effect: () => ({ reputation: 1 }) }
     ]
+  },
+  // --- New Added Student ---
+  {
+    id: 'e_s_new5',
+    title: '幽灵学生',
+    description: '你突然想起来，你名下好像有个学生已经半年没在实验室出现过了。',
+    category: 'student',
+    choices: [
+      { text: '全网通缉，发邮件打电话', description: '他终于出现了，原来是去考公了。', effect: () => ({ satisfaction: -1 }) },
+      { text: '直接上报学院退学处理', description: '杀鸡儆猴，其他学生瑟瑟发抖。', effect: () => ({ satisfaction: -2, reputation: 1 }) },
+      { text: '忘了也好，省心', description: '直到毕业答辩前夕他才出现，搞得你措手不及。', effect: () => ({ academic: -1 }) }
+    ]
+  },
+  {
+    id: 'e_s_new6',
+    title: '办公室恋情',
+    description: '你发现组里的一对师兄师妹不仅在谈恋爱，还在实验室秀恩爱。',
+    category: 'student',
+    choices: [
+      { text: '棒打鸳鸯，禁止办公室恋情', description: '两人转入地下，效率更低了。', effect: () => ({ satisfaction: -2 }) },
+      { text: '只要不影响工作，睁只眼闭只眼', description: '两人分手时大闹实验室，你被迫调解。', effect: () => ({ satisfaction: -1 }) },
+      { text: '只要你们这学期发文章，老师包红包', description: '两人为了红包疯狂做实验，居然真的发了。', effect: () => ({ academic: 2, resources: -1 }) }
+    ]
+  },
+  {
+    id: 'e_s_new7',
+    title: '土特产的惊喜',
+    description: '学生假期回来，给你带了一麻袋家里的“土特产”，打开一看是几只活鸡。',
+    category: 'student',
+    choices: [
+      { text: '欣然收下，晚上加餐', description: '学生觉得你很亲切，但你不会杀鸡。', effect: () => ({ satisfaction: 2, reputation: -1 }) },
+      { text: '这算受贿吗？坚决不要', description: '学生很失落，觉得你看不起他。', effect: () => ({ satisfaction: -1 }) },
+      { text: '养在实验室当吉祥物', description: '鸡打鸣影响了隔壁课题组，被投诉。', effect: () => ({ reputation: -1, satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_s_new8',
+    title: '股神学生',
+    description: '你发现有个学生不看文献，天天盯着K线图，据说赚得比你工资还多。',
+    category: 'student',
+    choices: [
+      { text: '没收手机，勒令科研', description: '学生表面答应，背地里用电脑看。', effect: () => ({ academic: 1, satisfaction: -1 }) },
+      { text: '虚心请教代码', description: '你跟着买了两手，小赚一笔经费。', effect: () => ({ resources: 2, reputation: -1 }) },
+      { text: '劝他把炒股算法写成论文', description: '居然发了一篇金融科技的顶刊！', effect: () => ({ academic: 3 }) }
+    ]
   }
 ];
 
@@ -364,6 +465,51 @@ const CAREER_EVENTS: GameEvent[] = [
       { text: '把样品搬到隔壁医院', description: '欠了医生朋友一个人情。', effect: () => ({ reputation: 1, resources: -1 }) },
       { text: '借机给学生放假', description: '样品坏了一部分，但大家都很开心。', effect: () => ({ satisfaction: 3, academic: -2 }) }
     ]
+  },
+  // --- New Added Career ---
+  {
+    id: 'e_c_new4',
+    title: '停车位之战',
+    description: '学校停车位紧张，你发现一个讲师用电瓶车占了唯一的车位。',
+    category: 'career',
+    choices: [
+      { text: '下车把电瓶车挪走', description: '你赢了车位，但车漆被划了一道。', effect: () => ({ resources: -1 }) },
+      { text: '在车里等半小时', description: '错过了一个重要会议。', effect: () => ({ academic: -1 }) },
+      { text: '停在校长车位上', description: '居然没事！你发现了新大陆。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_c_new5',
+    title: '社死群发邮件',
+    description: '你想给朋友吐槽院长，结果手滑点了“Reply All”（回复全体），全校教职工都收到了。',
+    category: 'career',
+    choices: [
+      { text: '立刻再发一封：账号被盗！', description: '没人信，但大家心照不宣。', effect: () => ({ reputation: -2 }) },
+      { text: '连夜买站票逃离这座城市', description: '开玩笑的，只能硬着头皮去上班。', effect: () => ({ reputation: -3, satisfaction: -2 }) },
+      { text: '声称这是社会学实验', description: '大家觉得你是个怪人。', effect: () => ({ academic: 1, reputation: -1 }) }
+    ]
+  },
+  {
+    id: 'e_c_new6',
+    title: '监考的煎熬',
+    description: '被安排去监考全校通识课，两个小时不能看手机。',
+    category: 'career',
+    choices: [
+      { text: '在考场转圈，数地板砖', description: '步数排行榜第一，但很无聊。', effect: () => ({ satisfaction: -1 }) },
+      { text: '盯着一个作弊的学生看', description: '学生心理防线崩溃，主动交出小抄。', effect: () => ({ reputation: 1 }) },
+      { text: '脑补下一个课题', description: '效率惊人，想出了个好点子。', effect: () => ({ academic: 1 }) }
+    ]
+  },
+  {
+    id: 'e_c_new7',
+    title: '校园施工噪音',
+    description: '隔壁楼开始装修，钻头声从早响到晚，震耳欲聋。',
+    category: 'career',
+    choices: [
+      { text: '买个降噪耳机', description: '世界安静了，但钱包瘦了。', effect: () => ({ resources: -1, satisfaction: 1 }) },
+      { text: '去投诉处拍桌子', description: '施工队答应中午停一小时。', effect: () => ({ reputation: 1 }) },
+      { text: '搬到图书馆办公', description: '遇见了以前的学生，聊得很开心。', effect: () => ({ satisfaction: 1 }) }
+    ]
   }
 ];
 
@@ -432,6 +578,62 @@ const RESOURCE_EVENTS: GameEvent[] = [
       { text: '收编为“实验室神兽”', description: '虽然要花钱买猫粮，但大家都爱撸猫减压。', effect: () => ({ satisfaction: 3, resources: -1 }) },
       { text: '送去流浪动物救助站', description: '理性的选择，无功无过。', effect: () => ({ academic: 0 }) },
       { text: '正好缺实验动物...（误）', description: '学生拼死护猫，差点造反。', effect: () => ({ satisfaction: -5, reputation: -2 }) }
+    ]
+  },
+  // --- New Added Network/Resource/Funny ---
+  {
+    id: 'e_n_new4',
+    title: '报账地狱',
+    description: '财务处退回了你的报销单：发票贴得不平，且缺一张打车票。',
+    category: 'network',
+    choices: [
+      { text: '卑微地重新贴，跑三趟', description: '腿跑断了，钱终于下来了。', effect: () => ({ resources: 1, satisfaction: -2 }) },
+      { text: '派学生去跑腿', description: '学生领教了社会的险恶，表示想退学。', effect: () => ({ satisfaction: -3, resources: 1 }) },
+      { text: '这钱我不要了！', description: '豪横！但心在滴血。', effect: () => ({ resources: -2 }) }
+    ]
+  },
+  {
+    id: 'e_n_new5',
+    title: '校园大鹅',
+    description: '实验室门口常驻一只大鹅，极具攻击性，已经啄伤了两个研究生。',
+    category: 'network',
+    choices: [
+      { text: '绕道走', description: '每天多走十分钟，大家怨声载道。', effect: () => ({ satisfaction: -1 }) },
+      { text: '与之搏斗', description: '你赢了，确立了实验室老大的地位。', effect: () => ({ reputation: 1 }) },
+      { text: '铁锅炖大鹅...（误）', description: '保护动物！你被保卫处谈话了。', effect: () => ({ reputation: -1 }) }
+    ]
+  },
+  {
+    id: 'e_n_new6',
+    title: '中年危机',
+    description: '你发现自己不自觉地拿起了保温杯，并往里面放了枸杞。',
+    category: 'network',
+    choices: [
+      { text: '坦然接受，养生第一', description: '身体变好了，工作效率提升。', effect: () => ({ academic: 1 }) },
+      { text: '换成咖啡，假装年轻', description: '胃疼犯了。', effect: () => ({ satisfaction: -1 }) },
+      { text: '去健身房举铁', description: '闪了腰，休息一周。', effect: () => ({ academic: -1 }) }
+    ]
+  },
+  {
+    id: 'e_n_new7',
+    title: '诈骗电话',
+    description: '接到电话：“我是张院长，明天来我办公室一下。”声音确实有点像。',
+    category: 'network',
+    choices: [
+      { text: '“院长好！我马上准备。”', description: '被骗走了两千块钱“急用金”。', effect: () => ({ resources: -2 }) },
+      { text: '反诈意识强，直接挂断', description: '安全无事。', effect: () => ({ resources: 0 }) },
+      { text: '“院长，您假发片到了吗？”', description: '对方沉默了，骂骂咧咧地挂了。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_n_new8',
+    title: '年底突击花钱',
+    description: '财务通知，今年经费还有20万没花完，如果不花完明年会收回。',
+    category: 'network',
+    choices: [
+      { text: '买一堆不需要的试剂', description: '仓库堆满了，但钱花出去了。', effect: () => ({ resources: -1 }) },
+      { text: '给学生多发劳务费', description: '学生高呼万岁，干劲十足。', effect: () => ({ satisfaction: 3, resources: -1 }) },
+      { text: '升级办公室电脑椅', description: '坐着舒服多了。', effect: () => ({ satisfaction: 1, resources: -1 }) }
     ]
   }
 ];
@@ -506,7 +708,7 @@ const RISK_EVENTS: GameEvent[] = [
   }
 ];
 
-// Special/Hidden Events
+// Special/Hidden Events (保持原有不变)
 const HIDDEN_EVENTS: GameEvent[] = [
   {
     id: 'e_h1',
@@ -531,7 +733,7 @@ const HIDDEN_EVENTS: GameEvent[] = [
   }
 ];
 
-// Chain Events (Triggered by Flags)
+// Chain Events (Triggered by Flags) (保持原有不变)
 const CHAIN_EVENTS: GameEvent[] = [
   {
     id: 'ce_1',

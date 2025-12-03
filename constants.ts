@@ -1,70 +1,70 @@
 
 import { GameEvent, Trait, Achievement, GameState, Upgrade, Title } from './types';
 
-// --- Traits (保持原有不变) ---
+// --- Traits (Nerfed some bonuses to +2 from +3) ---
 export const TRAITS: Trait[] = [
   // Professional
-  { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 3, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) },
+  { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 2, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) }, // Nerfed +3 -> +2
   { id: 't2', name: '跨学科人才', category: 'professional', description: '擅长结合不同领域，容易获得意外的资源支持。', effect: (s) => ({ ...s, academic: s.academic + 1, resources: s.resources + 2 }) },
   { id: 't3', name: '实干家', category: 'professional', description: '脚踏实地，基础属性均衡。', effect: (s) => ({ ...s, academic: s.academic + 1, satisfaction: s.satisfaction + 1 }) },
   { id: 't4', name: '理论派', category: 'professional', description: '理论功底深厚，但实践资源较少。', effect: (s) => ({ ...s, academic: s.academic + 2, resources: s.resources - 1 }) },
   { id: 't5', name: '海外优青', category: 'professional', description: '海归背景，初始资源丰富，但可能水土不服。', effect: (s) => ({ ...s, academic: s.academic + 2, resources: s.resources + 2, satisfaction: s.satisfaction - 1 }) },
 
   // Mentorship
-  { id: 't6', name: '温柔耐心', category: 'mentorship', description: '把学生当孩子看，学生满意度极高，但可能被认为太软弱。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 3, reputation: s.reputation - 1 }) },
+  { id: 't6', name: '温柔耐心', category: 'mentorship', description: '把学生当孩子看，学生满意度极高，但可能被认为太软弱。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 2, reputation: s.reputation - 1 }) }, // Nerfed +3 -> +2
   { id: 't7', name: '严格犀利', category: 'mentorship', description: '高压政策，出成果快，但学生怨声载道。', effect: (s) => ({ ...s, academic: s.academic + 2, satisfaction: s.satisfaction - 3 }) },
   { id: 't8', name: '放养导师', category: 'mentorship', description: '无为而治，学生全靠自觉。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 1, academic: s.academic - 1 }) },
   { id: 't9', name: 'PUA大师', category: 'mentorship', description: '擅长精神控制（不可取），短期压榨出成果，风险极大。', effect: (s) => ({ ...s, academic: s.academic + 3, satisfaction: s.satisfaction - 4 }) },
   { id: 't10', name: '就业指导师', category: 'mentorship', description: '不推学术推就业，学生毕业去向好，口碑佳。', effect: (s) => ({ ...s, reputation: s.reputation + 2, academic: s.academic - 2 }) },
 
   // Workplace
-  { id: 't11', name: '资源人脉广', category: 'workplace', description: '上面有人，横向项目不断。', effect: (s) => ({ ...s, resources: s.resources + 3, academic: s.academic - 1 }) },
+  { id: 't11', name: '资源人脉广', category: 'workplace', description: '上面有人，横向项目不断。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) }, // Nerfed +3 -> +2
   { id: 't12', name: '佛系随缘', category: 'workplace', description: '不争不抢，心态稳，难出大成就但也难出事。', effect: (s) => ({ ...s, reputation: s.reputation + 1, resources: s.resources - 1 }) },
   { id: 't13', name: '社交达人', category: 'workplace', description: '酒桌文化精通，混迹各种圈子。', effect: (s) => ({ ...s, resources: s.resources + 2, reputation: s.reputation - 1 }) },
   { id: 't14', name: '行政骨干', category: 'workplace', description: '双肩挑，既做学术也做行政，权力大事务多。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) },
   { id: 't15', name: '独行侠', category: 'workplace', description: '不站队，不混圈，全靠实力说话。', effect: (s) => ({ ...s, resources: s.resources - 2, academic: s.academic + 2 }) },
 ];
 
-// --- Upgrades (Shop) ---
+// --- Upgrades (Shop) - Massive Price Hike ---
 export const UPGRADES: Upgrade[] = [
     {
         id: 'u_coffee',
         name: '全自动咖啡机',
         description: '实验室的燃料。每年学生满意度 +1。',
-        cost: 3,
+        cost: 5, // 3 -> 5
         passive: () => ({ satisfaction: 1 })
     },
     {
         id: 'u_server',
         name: '高性能计算集群',
         description: '算力就是生产力。每年学术 +1。',
-        cost: 6,
+        cost: 12, // 6 -> 12
         passive: () => ({ academic: 1 })
     },
     {
         id: 'u_chair',
         name: '人体工学椅',
         description: '保护腰椎，人人有责。每年满意度 +1，声望 +1。',
-        cost: 5,
+        cost: 8, // 5 -> 8
         passive: () => ({ satisfaction: 1, reputation: 1 })
     },
     {
         id: 'u_admin',
         name: '行政助理',
         description: '雇人处理杂事。每年资源 +1，学术 +1。',
-        cost: 8,
+        cost: 15, // 8 -> 15
         passive: () => ({ resources: 1, academic: 1 })
     },
     {
         id: 'u_lounge',
         name: '休闲区 & 游戏机',
         description: '劳逸结合。每年满意度 +2。',
-        cost: 4,
+        cost: 10, // 4 -> 10
         passive: () => ({ satisfaction: 2 })
     }
 ];
 
-// --- Titles (Promotion) ---
+// --- Titles (Promotion) - Higher Requirements ---
 export const TITLES: Title[] = [
     {
         id: 'title_lecturer',
@@ -77,21 +77,21 @@ export const TITLES: Title[] = [
         id: 'title_associate',
         name: '副教授',
         level: 2,
-        condition: (s) => s.stats.academic >= 10 && s.stats.reputation >= 8 && s.year >= 5,
+        condition: (s) => s.stats.academic >= 12 && s.stats.reputation >= 10 && s.year >= 5, // Increased from 10/8
         passive: () => ({ resources: 1 })
     },
     {
         id: 'title_professor',
         name: '教授',
         level: 3,
-        condition: (s) => s.stats.academic >= 15 && s.stats.reputation >= 12 && s.year >= 10,
+        condition: (s) => s.stats.academic >= 16 && s.stats.reputation >= 14 && s.year >= 10, // Increased from 15/12
         passive: () => ({ resources: 1, reputation: 1 })
     },
     {
         id: 'title_distinguished',
         name: '杰出教授',
         level: 4,
-        condition: (s) => s.stats.academic >= 18 && s.stats.reputation >= 16 && s.achievements.length >= 2,
+        condition: (s) => s.stats.academic >= 19 && s.stats.reputation >= 18 && s.achievements.length >= 2, // Increased from 18/16
         passive: () => ({ resources: 2, reputation: 1 })
     },
     {

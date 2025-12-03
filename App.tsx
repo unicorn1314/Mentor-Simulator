@@ -49,7 +49,8 @@ const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant
 // --- Main App ---
 
 export default function App() {
-  const INITIAL_STATS: Stats = { academic: 6, reputation: 6, satisfaction: 6, resources: 6 };
+  // Harder start: 6 -> 4
+  const INITIAL_STATS: Stats = { academic: 4, reputation: 4, satisfaction: 4, resources: 4 };
   const RETIREMENT_YEAR = 30;
 
   const [gameState, setGameState] = useState<GameState>({
@@ -244,7 +245,10 @@ export default function App() {
         const gradChance = 0.2 + (s.talent * 0.05) + (yearsIn > 5 ? 0.5 : 0);
         if (Math.random() < gradChance) {
           logMessages.push({ year: currentYear, message: `${s.name} 顺利毕业。`, type: 'milestone' });
-          statChanges.academic = (statChanges.academic || 0) + (s.talent > 7 ? 1 : 0);
+          // Difficulty increase: Only high talent students contribute to academic score on graduation
+          if (s.talent > 7) {
+            statChanges.academic = (statChanges.academic || 0) + 1;
+          }
           return { ...s, status: 'graduated' };
         }
       }
@@ -304,9 +308,42 @@ export default function App() {
 
     // --- Start of New Year Logic ---
 
+    // 0. Entropy / Decay (High Difficulty Mechanism)
+    // 逆水行舟，不进则退：高属性维护成本极高
+    const decayChanges: Partial<Stats> = {};
+    const applyDecay = (val: number) => {
+        if (val > 18 && Math.random() < 0.5) return -1; // 50% decay at very high levels
+        if (val > 14 && Math.random() < 0.3) return -1; // 30% decay at high levels
+        if (val > 10 && Math.random() < 0.1) return -1; // 10% decay at medium levels
+        return 0;
+    };
+
+    const dAcademic = applyDecay(gameState.stats.academic);
+    const dReputation = applyDecay(gameState.stats.reputation);
+    const dSatisfaction = applyDecay(gameState.stats.satisfaction);
+    // Resources naturally drain more if you have a lot (people asking for money, maintenance)
+    const dResources = gameState.stats.resources > 12 && Math.random() < 0.3 ? -1 : 0;
+
+    if (dAcademic || dReputation || dSatisfaction || dResources) {
+         decayChanges.academic = dAcademic;
+         decayChanges.reputation = dReputation;
+         decayChanges.satisfaction = dSatisfaction;
+         decayChanges.resources = dResources;
+    }
+
     // 1. Trait Synergies & Passives
     let passiveChanges: Partial<Stats> = {};
     let traitLogs: LogEntry[] = [];
+    
+    if (dAcademic || dReputation || dSatisfaction || dResources) {
+         traitLogs.push({ year: nextYear, message: '【逆水行舟】由于行业竞争与知识迭代，部分属性自然衰减。', type: 'risk' });
+         // Combine decay with passive changes object
+         passiveChanges.academic = (passiveChanges.academic || 0) + (decayChanges.academic || 0);
+         passiveChanges.reputation = (passiveChanges.reputation || 0) + (decayChanges.reputation || 0);
+         passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) + (decayChanges.satisfaction || 0);
+         passiveChanges.resources = (passiveChanges.resources || 0) + (decayChanges.resources || 0);
+    }
+
     const traitIds = gameState.traits.map(t => t.id);
 
     // Synergy: Social + Admin

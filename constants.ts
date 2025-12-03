@@ -1163,7 +1163,7 @@ export const CHAIN_EVENTS: GameEvent[] = [
     condition: (stats, traits, sc, flags) => !!flags['media_exposure'],
     choices: [
         { text: '注销账号，退网保平安', description: '回归平静，但少了一个发声渠道。', effect: () => ({ reputation: -1, academic: 1 }), removeFlag: 'media_exposure' },
-        { text: '网上对线', description: '越吵越热，严重影响教学秩序。', effect: () => ({ reputation: -2, academic: -2, satisfaction: -2 }) }
+        { text: '网上对线', description: '越吵越热，严重影响教学秩序。', effect: () => ({ reputation: -2, academic: -2, satisfaction: -2 }), removeFlag: 'media_exposure' }
     ]
   },
   {

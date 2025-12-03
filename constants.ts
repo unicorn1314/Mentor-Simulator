@@ -1,6 +1,6 @@
-
 import { GameEvent, Trait, Achievement, GameState, Upgrade, Title, Ending, KPI, ProjectDefinition } from './types';
 import { DLC_EVENTS } from './dlc_events';
+import { NEW_CHAIN_EVENTS } from './dlc_chains';
 
 // --- Traits (Nerfed some bonuses to +2 from +3) ---
 export const TRAITS: Trait[] = [
@@ -191,7 +191,7 @@ export const ENDINGS: Ending[] = [
     {
         id: 'end_mentor',
         title: '【优秀】良师益友',
-        description: '你也许没有惊人的学术成就，但对学生无微不至的关怀改变了很多人的人生轨迹。',
+        description: '你也许没有惊人的学术成就，但对学生无微不至的关怀改变了很多人的人生轨迹。你是学生心中最温暖的记忆。',
         condition: (s, a, t) => s.satisfaction >= 16,
         color: 'text-pink-500',
         bgColor: 'bg-pink-50'
@@ -1061,7 +1061,8 @@ export const CHAIN_EVENTS: GameEvent[] = [
     choices: [
         { text: '抢救...', description: 'ICU 住了三个月，虽然捡回一条命，但学术生涯基本结束了。', effect: () => ({ academic: -10, resources: -10, satisfaction: -10, reputation: -10 }), removeFlag: 'critical_health' }
     ]
-  }
+  },
+  ...NEW_CHAIN_EVENTS
 ];
 
 export const EVENT_POOL = [
@@ -1073,52 +1074,9 @@ export const EVENT_POOL = [
   ...DLC_EVENTS
 ];
 
+// --- Hidden Events (Existing) ---
 export const HIDDEN_EVENTS: GameEvent[] = [
-  {
-    id: 'e_h1',
-    title: '重大国家专项（隐藏）',
-    description: '由于你学术造诣极高且资源丰富，国家级重大项目找上门来。',
-    category: 'academic',
-    condition: (stats, traits) => stats.academic >= 18 && stats.resources >= 15,
-    choices: [
-      { text: '签下军令状', description: '虽然掉了一层皮，但成为了国宝级科学家。', effect: () => ({ academic: 5, reputation: 5 }) },
-      { text: '觉得太累，推辞', description: '错失良机。', effect: () => ({ reputation: -2 }) },
-    ]
-  },
-  {
-    id: 'e_h2',
-    title: '桃李满天下（隐藏）',
-    description: '你的学生在各行各业都成了大佬，回来联名给你办祝寿会。',
-    category: 'student',
-    condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
-    choices: [
-      { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
-    ]
-  },
-  // New Grounded Hidden Events
-  {
-    id: 'e_h_celebrity',
-    title: '综艺节目的邀约',
-    description: '一档国民级综艺节目邀请你担任常驻嘉宾，通告费比你十年的工资还高。',
-    category: 'network',
-    condition: (stats, traits, sc, flags) => stats.reputation >= 16 && stats.academic <= 14 && !flags['is_celebrity'],
-    choices: [
-      { text: '拥抱流量，成为明星教授', description: '你火了，但同行看你的眼神变了。', effect: () => ({ resources: 5, reputation: 5, academic: -3 }), setFlag: 'is_celebrity' },
-      { text: '拒绝，保持学者风骨', description: '你错过了一夜暴富的机会。', effect: () => ({ reputation: 1 }) }
-    ]
-  },
-  {
-    id: 'e_h_hermit',
-    title: '最后一块拼图',
-    description: '你意识到要攻克最终的难题，必须断绝与外界的一切无效社交，闭关修炼。',
-    category: 'academic',
-    condition: (stats, traits, sc, flags) => stats.academic >= 19 && stats.reputation <= 10 && !flags['is_hermit'],
-    choices: [
-      { text: '闭关！谁也别来烦我', description: '你消失在公众视野中，成为了传说。', effect: () => ({ academic: 2, resources: -2, reputation: -2 }), setFlag: 'is_hermit' },
-      { text: '还是舍不得红尘', description: '生活继续。', effect: () => ({ satisfaction: 1 }) }
-    ]
-  },
-  // Retain existing ones
+  // ... (Hidden events from dlc_events or inline)
   {
     id: 'e_h_nobel_call',
     title: '斯德哥尔摩的来电',
@@ -1161,6 +1119,50 @@ export const HIDDEN_EVENTS: GameEvent[] = [
     choices: [
       { text: '打开看', description: '那是你入职第一天写给未来的自己：“勿忘初心”。你泪流满面。', effect: () => ({ satisfaction: 5, reputation: 1 }) },
       { text: '捐给校史馆', description: '成为了学校的传说。', effect: () => ({ reputation: 2 }) }
+    ]
+  },
+  // Grounded hidden events
+  {
+    id: 'e_h_celebrity',
+    title: '综艺节目的邀约',
+    description: '一档国民级综艺节目邀请你担任常驻嘉宾，通告费比你十年的工资还高。',
+    category: 'network',
+    condition: (stats, traits, sc, flags) => stats.reputation >= 16 && stats.academic <= 14 && !flags['is_celebrity'],
+    choices: [
+      { text: '拥抱流量，成为明星教授', description: '你火了，但同行看你的眼神变了。', effect: () => ({ resources: 5, reputation: 5, academic: -3 }), setFlag: 'is_celebrity' },
+      { text: '拒绝，保持学者风骨', description: '你错过了一夜暴富的机会。', effect: () => ({ reputation: 1 }) }
+    ]
+  },
+  {
+    id: 'e_h_hermit',
+    title: '最后一块拼图',
+    description: '你意识到要攻克最终的难题，必须断绝与外界的一切无效社交，闭关修炼。',
+    category: 'academic',
+    condition: (stats, traits, sc, flags) => stats.academic >= 19 && stats.reputation <= 10 && !flags['is_hermit'],
+    choices: [
+      { text: '闭关！谁也别来烦我', description: '你消失在公众视野中，成为了传说。', effect: () => ({ academic: 2, resources: -2, reputation: -2 }), setFlag: 'is_hermit' },
+      { text: '还是舍不得红尘', description: '生活继续。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_h1',
+    title: '重大国家专项（隐藏）',
+    description: '由于你学术造诣极高且资源丰富，国家级重大项目找上门来。',
+    category: 'academic',
+    condition: (stats, traits) => stats.academic >= 18 && stats.resources >= 15,
+    choices: [
+      { text: '签下军令状', description: '虽然掉了一层皮，但成为了国宝级科学家。', effect: () => ({ academic: 5, reputation: 5 }) },
+      { text: '觉得太累，推辞', description: '错失良机。', effect: () => ({ reputation: -2 }) },
+    ]
+  },
+  {
+    id: 'e_h2',
+    title: '桃李满天下（隐藏）',
+    description: '你的学生在各行各业都成了大佬，回来联名给你办祝寿会。',
+    category: 'student',
+    condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
+    choices: [
+      { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
     ]
   }
 ];

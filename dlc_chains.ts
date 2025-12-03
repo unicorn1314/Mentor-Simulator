@@ -12,7 +12,7 @@ export const NEW_CHAIN_EVENTS: GameEvent[] = [
         // 早期触发 (2-8年)
         condition: (s, t, c, f, y) => y >= 2 && y <= 8 && !f['rival_met'],
         choices: [
-            { text: '当众回怼，立下战书', description: '梁子结下了！你们开始了长达几十年的明争暗斗。', effect: () => ({ academic: 1 }), setFlag: 'rival_met' }, // Simplified: generic met flag
+            { text: '当众回怼，立下战书', description: '梁子结下了！你们开始了长达几十年的明争暗斗。', effect: () => ({ academic: 1 }), setFlag: 'rival_met' },
             { text: '无视他，专注自己', description: '他觉得被轻视了，反而更加针对你。', effect: () => ({ reputation: 1 }), setFlag: 'rival_met' },
             { text: '主动示好，寻求合作', description: '对方愣住了，虽然没接受，但敌意减少了。', effect: () => ({ resources: 1 }), setFlag: 'rival_peace' }
         ]

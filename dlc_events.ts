@@ -2,97 +2,7 @@
 import { GameEvent } from './types';
 
 export const DLC_EVENTS: GameEvent[] = [
-    // --- New Grounded Events (Batch 2) ---
-    {
-        id: 'e_dlc_new_16',
-        title: '实验室火锅局',
-        description: '周末晚上，你推门进实验室，发现学生们正用烧杯煮火锅，香味扑鼻。',
-        category: 'student',
-        choices: [
-            { text: '大怒！这是安全违规', description: '虽然为了安全，但你成了“扫兴鬼”。', effect: () => ({ satisfaction: -2, reputation: 1 }) },
-            { text: '“加双筷子，我带了肥牛”', description: '师生关系达到了巅峰，但第二天大家都拉肚子了。', effect: () => ({ satisfaction: 3, academic: -1 }) },
-            { text: '假装没看见，默默关门', description: '学生们松了一口气。', effect: () => ({ satisfaction: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_17',
-        title: '本科生大神',
-        description: '一个本科生在你的课上指出了你 PPT 里的一个推导错误，全班鸦雀无声。',
-        category: 'academic',
-        choices: [
-            { text: '恼羞成怒，强行解释', description: '“这...这是为了测试你们听课认不认真！”学生们都在憋笑。', effect: () => ({ reputation: -2 }) },
-            { text: '当场承认并表扬', description: '展现了大师风度，该学生后来加入了你的组。', effect: () => ({ reputation: 2, academic: 1 }) },
-            { text: '课后私下交流', description: '你发现他是个天才，直接预定为直博生。', effect: () => ({ academic: 2, resources: -1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_18',
-        title: '教务处的排课背刺',
-        description: '新学期课表出来了，你被安排了一周三次的早八点通识课，校区还很远。',
-        category: 'career',
-        choices: [
-            { text: '硬着头皮上', description: '每天起得比鸡早，黑眼圈更重了。', effect: () => ({ academic: -1, reputation: 1 }) },
-            { text: '找教务处理论', description: '经过一番扯皮，换成了晚课，但得罪了教务老师。', effect: () => ({ reputation: -1, satisfaction: 1 }) },
-            { text: '让博士生替你上几节', description: '被学生举报了，全校通报批评。', effect: () => ({ reputation: -3, satisfaction: -2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_19',
-        title: '神秘的 U 盘',
-        description: '你在图书馆捡到一个 U 盘，上面写着“绝密数据”。',
-        category: 'risk',
-        choices: [
-            { text: '插到实验室电脑看', description: '是比特币勒索病毒！全组数据再次火葬场。', effect: () => ({ academic: -3, resources: -2 }) },
-            { text: '交给保卫处', description: '原来是校长的私人 U 盘，里面全是...风景照。', effect: () => ({ reputation: 1 }) },
-            { text: '扔进垃圾桶', description: '安全第一，无事发生。', effect: () => ({ academic: 0 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_20',
-        title: '退休老教授的馈赠',
-        description: '隔壁即将退休的老院士在清理办公室，问你要不要几箱旧资料。',
-        category: 'network',
-        choices: [
-            { text: '如获至宝，全搬回来', description: '里面竟然夹着几十年前的绝密手稿！', effect: () => ({ academic: 4, resources: 1 }) },
-            { text: '嫌占地方，婉拒', description: '后来听说被当废纸卖了，你悔青了肠子。', effect: () => ({ academic: -1 }) },
-            { text: '只要仪器，不要纸', description: '获得了一些老旧但耐用的设备。', effect: () => ({ resources: 2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_21',
-        title: '学术会议的艳遇？',
-        description: '在国际会议晚宴上，一位风度翩翩的异性学者主动找你搭讪。',
-        category: 'network',
-        choices: [
-            { text: '深入交流学术', description: '你们聊了一晚上量子力学，建立了深厚的...学术友谊。', effect: () => ({ academic: 2, reputation: 1 }) },
-            { text: '发展私人感情', description: '结果对方是想套取你的未发表数据。', effect: () => ({ academic: -2, reputation: -1 }) },
-            { text: '推销自己的学生', description: '“看看我这个博士生，单身，能干活！”学生感动的想哭。', effect: () => ({ satisfaction: 2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_22',
-        title: '财务系统升级',
-        description: '学校财务系统升级了，新系统极其难用，报销单填错一个标点都要退回。',
-        category: 'career',
-        choices: [
-            { text: '亲自研究新系统', description: '花了一周时间成为了报销专家，荒废了科研。', effect: () => ({ academic: -2, resources: 2 }) },
-            { text: '雇个财务助理', description: '花钱买省心，值得。', effect: () => ({ resources: -3, academic: 1 }) },
-            { text: '在教师群里疯狂吐槽', description: '引发了共鸣，成为了“教师权益代言人”。', effect: () => ({ reputation: 2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_new_23',
-        title: '停电惊魂 2.0',
-        description: '又是停电！这次备用电源也坏了，-80度冰箱正在快速升温。',
-        category: 'risk',
-        choices: [
-            { text: '去买干冰', description: '全城干冰都被买光了，你只抢到一点点。', effect: () => ({ resources: -1, academic: -1 }) },
-            { text: '把样品转移到院长办公室冰箱', description: '院长冰箱里全是茶叶，被你扔了出来。', effect: () => ({ academic: 1, reputation: -2 }) },
-            { text: '听天由命', description: '居然来电了！这是玄学胜利。', effect: () => ({ academic: 0 }) }
-        ]
-    },
-
-    // --- Academic & Sci-Fi (Existing) ---
+    // --- Academic & Sci-Fi ---
     {
         id: 'e_dlc_1',
         title: 'GPT 论文风波',
@@ -127,7 +37,7 @@ export const DLC_EVENTS: GameEvent[] = [
         ]
     },
     
-    // --- Career & Admin (Existing) ---
+    // --- Career & Admin ---
     {
         id: 'e_dlc_2',
         title: '实验室搬迁',
@@ -173,7 +83,7 @@ export const DLC_EVENTS: GameEvent[] = [
         ]
     },
 
-    // --- Student Life (Existing) ---
+    // --- Student Life ---
     {
         id: 'e_dlc_4',
         title: '学生博主',
@@ -208,7 +118,7 @@ export const DLC_EVENTS: GameEvent[] = [
         ]
     },
 
-    // --- Network & Random (Existing) ---
+    // --- Network & Random ---
     {
         id: 'e_dlc_8',
         title: '二手仪器捡漏',
@@ -254,7 +164,7 @@ export const DLC_EVENTS: GameEvent[] = [
         ]
     },
 
-    // --- Risk (Existing) ---
+    // --- Risk ---
     {
         id: 'e_dlc_new_2',
         title: '深夜的敲门声',
@@ -289,7 +199,7 @@ export const DLC_EVENTS: GameEvent[] = [
         ]
     },
 
-    // --- Hidden Events (Existing) ---
+    // --- Hidden Events ---
     {
         id: 'e_h_nobel_call',
         title: '斯德哥尔摩的来电',

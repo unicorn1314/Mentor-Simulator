@@ -202,21 +202,12 @@ export default function App() {
       if (t.effect) newStats = t.effect(newStats);
     });
 
-    // Final safety check
+    // Final safety check to ensure game doesn't start with Game Over stats
+    // Even if traits reduce stats, clamp them to minimum 1 at start
     newStats.academic = Math.max(1, newStats.academic);
     newStats.reputation = Math.max(1, newStats.reputation);
     newStats.satisfaction = Math.max(1, newStats.satisfaction);
     newStats.resources = Math.max(1, newStats.resources);
-
-    // Calculate changes for visual feedback
-    const changes: Partial<Stats> = {
-        academic: newStats.academic - INITIAL_STATS.academic,
-        reputation: newStats.reputation - INITIAL_STATS.reputation,
-        satisfaction: newStats.satisfaction - INITIAL_STATS.satisfaction,
-        resources: newStats.resources - INITIAL_STATS.resources
-    };
-
-    spawnFloatingText(changes);
 
     setGameState(prev => ({
       ...prev,
@@ -231,69 +222,31 @@ export default function App() {
     const { stats, traits, studentCount, flags, year } = gameState;
     const traitIds = traits.map(t => t.id);
 
-    // 1. Check for Chain Events (High Priority but Random)
-    // Filter ALL possible chain events that meet conditions
-    const possibleChains = CHAIN_EVENTS.filter(e => 
+    // 1. Check for Chain Events (High Priority)
+    const chainTrigger = CHAIN_EVENTS.find(e => 
       e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
     
-    // Pick one randomly if available, with 30% chance to trigger any chain if available
-    if (possibleChains.length > 0 && Math.random() < 0.3) { 
-      const selectedChain = possibleChains[Math.floor(Math.random() * possibleChains.length)];
-      setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: selectedChain }));
+    // Higher chance for chain events if conditions are met
+    if (chainTrigger && Math.random() < 0.7) { 
+      setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: chainTrigger }));
       return;
     }
 
     // 2. Check for Hidden Events
-    // Lowered probability from 0.05 to 0.01 (1%) for ultra rare feel
     const hiddenTrigger = HIDDEN_EVENTS.find(e => 
       e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
 
-    if (hiddenTrigger && Math.random() < 0.01) {
+    if (hiddenTrigger && Math.random() < 0.3) {
       setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: hiddenTrigger }));
       return;
     }
 
     // 3. Pick Random Event from Pool
-    let validPool = EVENT_POOL;
-    let event = null;
-    let attempts = 0;
-
-    while (!event && attempts < 5) {
-        const randomIndex = Math.floor(Math.random() * validPool.length);
-        const candidate = validPool[randomIndex];
-        
-        // If it's a risk event, perform extra check to see if we should skip it (reduce frequency)
-        if (candidate.category === 'risk') {
-            // 20% chance to actually trigger a risk event if selected, making them rarer
-            // And ensure it hasn't been handled yet (redundant with condition but safe)
-            const isHandled = candidate.condition && !candidate.condition(stats, traitIds, studentCount, flags, year);
-            
-            if (!isHandled && Math.random() < 0.2) { 
-                event = candidate;
-            }
-        } else {
-            // Normal event
-             if (!candidate.condition || candidate.condition(stats, traitIds, studentCount, flags, year)) {
-                event = candidate;
-            }
-        }
-        attempts++;
-    }
-    
-    // Fallback if loop failed
-    if (!event) {
-        // Try finding any valid event
-        const fallbackCandidates = EVENT_POOL.filter(e => !e.condition || e.condition(stats, traitIds, studentCount, flags, year));
-        if (fallbackCandidates.length > 0) {
-            event = fallbackCandidates[Math.floor(Math.random() * fallbackCandidates.length)];
-        }
-    }
-
-    if (event) {
-        setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
-    }
+    const randomIndex = Math.floor(Math.random() * EVENT_POOL.length);
+    const event = EVENT_POOL[randomIndex];
+    setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
   }, [gameState.stats, gameState.traits, gameState.studentCount, gameState.flags, gameState.year]); 
 
   const processStudentLifecycle = (currentStats: Stats, currentStudents: Student[], currentYear: number) => {

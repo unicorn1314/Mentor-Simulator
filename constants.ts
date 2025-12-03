@@ -103,7 +103,7 @@ export const TITLES: Title[] = [
     }
 ];
 
-// --- Rich Endings ---
+// --- Rich Endings (Updated) ---
 export const ENDINGS: Ending[] = [
     {
         id: 'end_legend_academic',
@@ -116,8 +116,9 @@ export const ENDINGS: Ending[] = [
     {
         id: 'end_legend_educator',
         title: '【传说】万世师表',
-        description: '你的学生遍布全球名校和科研机构，桃李满天下。每年教师节，你的邮箱都会被感谢信塞满。',
-        condition: (s, a, t) => s.satisfaction >= 19 && a.includes('ach_1'), // ach_1 is 10 students graduated
+        description: '你的学生遍布全球名校和科研机构，桃李满天下。你不仅深受爱戴，更在教育界享有崇高的声望。',
+        // Increased difficulty: Requires reputation >= 12 and academic >= 10
+        condition: (s, a, t) => s.satisfaction >= 19 && s.reputation >= 12 && s.academic >= 10 && a.includes('ach_1'),
         color: 'text-pink-600',
         bgColor: 'bg-pink-50'
     },
@@ -125,7 +126,8 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_tycoon',
         title: '【传说】产学研大亨',
         description: '你不仅学术有成，更建立了庞大的商业帝国。你的技术转化成果改变了行业，你也实现了财务自由。',
-        condition: (s, a, t) => s.resources >= 19,
+        // Increased difficulty: Requires reputation >= 10
+        condition: (s, a, t) => s.resources >= 19 && s.reputation >= 10,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50'
     },
@@ -144,6 +146,15 @@ export const ENDINGS: Ending[] = [
         condition: (s, a, t) => s.academic >= 15 || s.reputation >= 15,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50'
+    },
+    // New: Intermediate ending for high satisfaction but lower other stats
+    {
+        id: 'end_mentor',
+        title: '【优秀】良师益友',
+        description: '你也许没有惊人的学术成就，但对学生无微不至的关怀改变了很多人的人生轨迹。你是学生心中最温暖的记忆。',
+        condition: (s, a, t) => s.satisfaction >= 16,
+        color: 'text-pink-500',
+        bgColor: 'bg-pink-50'
     },
     {
         id: 'end_rich',

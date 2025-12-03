@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer } from 'lucide-react';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer, ShieldCheck } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
 import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES, ENDINGS, KPIS, PROJECTS } from './constants';
 
@@ -219,12 +219,12 @@ export default function App() {
   };
 
   const triggerEvent = useCallback(() => {
-    const { stats, traits, studentCount, flags } = gameState;
+    const { stats, traits, studentCount, flags, year } = gameState;
     const traitIds = traits.map(t => t.id);
 
     // 1. Check for Chain Events (High Priority)
     const chainTrigger = CHAIN_EVENTS.find(e => 
-      e.condition && e.condition(stats, traitIds, studentCount, flags)
+      e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
     
     // Higher chance for chain events if conditions are met
@@ -235,7 +235,7 @@ export default function App() {
 
     // 2. Check for Hidden Events
     const hiddenTrigger = HIDDEN_EVENTS.find(e => 
-      e.condition && e.condition(stats, traitIds, studentCount, flags)
+      e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
 
     if (hiddenTrigger && Math.random() < 0.3) {
@@ -247,7 +247,7 @@ export default function App() {
     const randomIndex = Math.floor(Math.random() * EVENT_POOL.length);
     const event = EVENT_POOL[randomIndex];
     setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
-  }, [gameState.stats, gameState.traits, gameState.studentCount, gameState.flags]); 
+  }, [gameState.stats, gameState.traits, gameState.studentCount, gameState.flags, gameState.year]); 
 
   const processStudentLifecycle = (currentStats: Stats, currentStudents: Student[], currentYear: number) => {
     let newStudents = [...currentStudents];
@@ -331,7 +331,7 @@ export default function App() {
     // Check for Retirement
     if (gameState.year >= RETIREMENT_YEAR) {
       // Calculate Rich Ending
-      const ending = ENDINGS.find(e => e.condition(gameState.stats, gameState.achievements, gameState.title)) || ENDINGS[ENDINGS.length - 1];
+      const ending = ENDINGS.find(e => e.condition(gameState.stats, gameState.achievements, gameState.title, gameState.flags)) || ENDINGS[ENDINGS.length - 1];
       
       setGameState(prev => ({ 
         ...prev, 
@@ -358,13 +358,13 @@ export default function App() {
 
     // --- Start of New Year Logic ---
 
-    // 0. Entropy / Decay (High Difficulty Mechanism) - Relaxed Thresholds
+    // 0. Entropy / Decay (High Difficulty Mechanism)
     // 逆水行舟，不进则退：高属性维护成本极高
     const decayChanges: Partial<Stats> = {};
     const applyDecay = (val: number) => {
-        if (val > 19 && Math.random() < 0.5) return -1; // Raised from 18
-        if (val > 16 && Math.random() < 0.3) return -1; // Raised from 14
-        if (val > 12 && Math.random() < 0.1) return -1; // Raised from 10
+        if (val > 18 && Math.random() < 0.5) return -1; // 50% decay at very high levels
+        if (val > 14 && Math.random() < 0.3) return -1; // 30% decay at high levels
+        if (val > 10 && Math.random() < 0.1) return -1; // 10% decay at medium levels
         return 0;
     };
 
@@ -372,7 +372,7 @@ export default function App() {
     const dReputation = applyDecay(gameState.stats.reputation);
     const dSatisfaction = applyDecay(gameState.stats.satisfaction);
     // Resources naturally drain more if you have a lot (people asking for money, maintenance)
-    const dResources = gameState.stats.resources > 14 && Math.random() < 0.3 ? -1 : 0; // Raised from 12
+    const dResources = gameState.stats.resources > 12 && Math.random() < 0.3 ? -1 : 0;
 
     if (dAcademic || dReputation || dSatisfaction || dResources) {
          decayChanges.academic = dAcademic;
@@ -624,9 +624,15 @@ export default function App() {
   };
 
   const closeSummary = () => {
+      // Check Tenure Status
+      const currentTitleDef = TITLES.find(t => t.id === gameState.title);
+      // Level 2 is Associate Professor. Professors and above are safe from KPI.
+      const isTenured = (currentTitleDef?.level || 0) >= 2;
+
       // Check KPI before advancing
       const failedKPI = KPIS.find(k => k.year === gameState.year && !k.condition(gameState.stats));
-      if (failedKPI) {
+      
+      if (failedKPI && !isTenured) {
           setGameState(prev => ({
               ...prev,
               phase: 'GAMEOVER',
@@ -635,6 +641,7 @@ export default function App() {
           }));
       } else {
           // Explicitly bypass the summary check to advance to the next year
+          // Even if KPI failed, if tenured, we survive.
           advanceYear(true);
       }
   };
@@ -927,9 +934,14 @@ export default function App() {
       const activeStudents = gameState.students.filter(s => s.status === 'active').length;
       const graduatedStudents = gameState.students.filter(s => s.status === 'graduated').length;
       
+      // Tenure check (Professor and above)
+      const currentTitleDef = TITLES.find(t => t.id === gameState.title);
+      const isTenured = (currentTitleDef?.level || 0) >= 2; // Level 2 is Associate Professor
+
       // KPI Check preview
       const nextKPI = KPIS.find(k => k.year === gameState.year);
       const kpiPassed = nextKPI ? nextKPI.condition(gameState.stats) : true;
+      const isSafe = isTenured || kpiPassed;
 
       return (
         <div className="fixed inset-0 bg-stone-900/80 flex items-center justify-center p-4 z-50 backdrop-blur-md">
@@ -961,10 +973,12 @@ export default function App() {
                     </div>
 
                     {nextKPI && (
-                        <div className={`mb-6 p-4 border-2 rounded-lg text-center ${kpiPassed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                        <div className={`mb-6 p-4 border-2 rounded-lg text-center ${isSafe ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                             <h4 className="font-bold mb-2 uppercase text-sm tracking-wider">非升即走考核结果</h4>
                             <p className="mb-2">{nextKPI.description}</p>
-                            {kpiPassed ? (
+                            {isTenured ? (
+                                <span className="text-blue-600 font-bold flex items-center justify-center gap-2"><ShieldCheck/> 已获长聘 (免考核)</span>
+                            ) : kpiPassed ? (
                                 <span className="text-green-600 font-bold flex items-center justify-center gap-2"><CheckCircle2/> 考核通过</span>
                             ) : (
                                 <span className="text-red-600 font-bold flex items-center justify-center gap-2"><AlertTriangle/> 考核失败 (将解聘)</span>
@@ -973,7 +987,7 @@ export default function App() {
                     )}
 
                     <Button onClick={closeSummary} className="w-full">
-                        {kpiPassed ? '开启下一个五年' : '接受解聘通知'}
+                        {isSafe ? '开启下一个五年' : '接受解聘通知'}
                     </Button>
                 </div>
             </div>
@@ -1189,11 +1203,11 @@ export default function App() {
         {/* Right Column (Career) - Hidden on mobile unless 'career' tab is active */}
         <div className={`md:col-span-8 flex flex-col gap-6 ${mobileTab === 'career' ? 'block' : 'hidden md:flex'}`}>
             {/* Action Bar */}
-            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col md:grid md:grid-cols-[1fr_auto] gap-4 shadow-sm sticky top-[72px] md:top-0 z-20">
-                 <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block self-center">
+            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center shadow-sm gap-4 sticky top-[72px] md:top-0 z-20">
+                 <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
+                 <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
                      <Button onClick={() => setShowProjects(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
                          <FileText size={18} className="hidden md:inline" /> 申报
                          {hasAvailableProject && (

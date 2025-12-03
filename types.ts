@@ -32,7 +32,7 @@ export interface GameEvent {
   description: string;
   category: 'academic' | 'student' | 'career' | 'network' | 'risk';
   choices: Choice[];
-  condition?: (stats: Stats, traits: string[], studentCount: number, flags: Record<string, boolean>) => boolean;
+  condition?: (stats: Stats, traits: string[], studentCount: number, flags: Record<string, boolean>, year: number) => boolean;
 }
 
 export interface LogEntry {
@@ -84,7 +84,7 @@ export interface Ending {
   id: string;
   title: string;
   description: string;
-  condition: (stats: Stats, achievements: string[], title: string) => boolean;
+  condition: (stats: Stats, achievements: string[], title: string, flags: Record<string, boolean>) => boolean;
   color: string;
   bgColor: string;
 }

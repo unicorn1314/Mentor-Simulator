@@ -1,97 +1,98 @@
 
 import { GameEvent, Trait, Achievement, GameState, Upgrade, Title, Ending, KPI, ProjectDefinition } from './types';
+import { DLC_EVENTS } from './dlc_events';
 
 // --- Traits (Nerfed some bonuses to +2 from +3) ---
 export const TRAITS: Trait[] = [
   // Professional
-  { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 2, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) }, // Nerfed +3 -> +2
+  { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 2, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) },
   { id: 't2', name: '跨学科人才', category: 'professional', description: '擅长结合不同领域，容易获得意外的资源支持。', effect: (s) => ({ ...s, academic: s.academic + 1, resources: s.resources + 2 }) },
   { id: 't3', name: '实干家', category: 'professional', description: '脚踏实地，基础属性均衡。', effect: (s) => ({ ...s, academic: s.academic + 1, satisfaction: s.satisfaction + 1 }) },
   { id: 't4', name: '理论派', category: 'professional', description: '理论功底深厚，但实践资源较少。', effect: (s) => ({ ...s, academic: s.academic + 2, resources: s.resources - 1 }) },
   { id: 't5', name: '海外优青', category: 'professional', description: '海归背景，初始资源丰富，但可能水土不服。', effect: (s) => ({ ...s, academic: s.academic + 2, resources: s.resources + 2, satisfaction: s.satisfaction - 1 }) },
 
   // Mentorship
-  { id: 't6', name: '温柔耐心', category: 'mentorship', description: '把学生当孩子看，学生满意度极高，但可能被认为太软弱。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 2, reputation: s.reputation - 1 }) }, // Nerfed +3 -> +2
-  { id: 't7', name: '严格犀利', category: 'mentorship', description: '高压政策，出成果快，但学生怨声载道。', effect: (s) => ({ ...s, academic: s.academic + 2, satisfaction: s.satisfaction - 2 }) }, // Nerfed penalty -3 -> -2 to prevent instant game over
+  { id: 't6', name: '温柔耐心', category: 'mentorship', description: '把学生当孩子看，学生满意度极高，但可能被认为太软弱。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 2, reputation: s.reputation - 1 }) },
+  { id: 't7', name: '严格犀利', category: 'mentorship', description: '高压政策，出成果快，但学生怨声载道。', effect: (s) => ({ ...s, academic: s.academic + 2, satisfaction: s.satisfaction - 2 }) },
   { id: 't8', name: '放养导师', category: 'mentorship', description: '无为而治，学生全靠自觉。', effect: (s) => ({ ...s, satisfaction: s.satisfaction + 1, academic: s.academic - 1 }) },
-  { id: 't9', name: 'PUA大师', category: 'mentorship', description: '擅长精神控制（不可取），短期压榨出成果，风险极大。', effect: (s) => ({ ...s, academic: s.academic + 3, satisfaction: s.satisfaction - 3 }) }, // Nerfed penalty -4 -> -3 to prevent instant game over
+  { id: 't9', name: 'PUA大师', category: 'mentorship', description: '擅长精神控制（不可取），短期压榨出成果，风险极大。', effect: (s) => ({ ...s, academic: s.academic + 3, satisfaction: s.satisfaction - 3 }) },
   { id: 't10', name: '就业指导师', category: 'mentorship', description: '不推学术推就业，学生毕业去向好，口碑佳。', effect: (s) => ({ ...s, reputation: s.reputation + 2, academic: s.academic - 2 }) },
 
   // Workplace
-  { id: 't11', name: '资源人脉广', category: 'workplace', description: '上面有人，横向项目不断。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) }, // Nerfed +3 -> +2
+  { id: 't11', name: '资源人脉广', category: 'workplace', description: '上面有人，横向项目不断。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) },
   { id: 't12', name: '佛系随缘', category: 'workplace', description: '不争不抢，心态稳，难出大成就但也难出事。', effect: (s) => ({ ...s, reputation: s.reputation + 1, resources: s.resources - 1 }) },
   { id: 't13', name: '社交达人', category: 'workplace', description: '酒桌文化精通，混迹各种圈子。', effect: (s) => ({ ...s, resources: s.resources + 2, reputation: s.reputation - 1 }) },
   { id: 't14', name: '行政骨干', category: 'workplace', description: '双肩挑，既做学术也做行政，权力大事务多。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) },
   { id: 't15', name: '独行侠', category: 'workplace', description: '不站队，不混圈，全靠实力说话。', effect: (s) => ({ ...s, resources: s.resources - 2, academic: s.academic + 2 }) },
 ];
 
-// --- Upgrades (Shop) - Massive Price Hike ---
+// --- Upgrades (Shop) ---
 export const UPGRADES: Upgrade[] = [
     {
         id: 'u_coffee',
         name: '全自动咖啡机',
         description: '实验室的燃料。每年学生满意度 +1。',
-        cost: 5, // 3 -> 5
+        cost: 5,
         passive: () => ({ satisfaction: 1 })
     },
     {
         id: 'u_server',
         name: '高性能计算集群',
         description: '算力就是生产力。每年学术 +1。',
-        cost: 12, // 6 -> 12
+        cost: 12,
         passive: () => ({ academic: 1 })
     },
     {
         id: 'u_chair',
         name: '人体工学椅',
         description: '保护腰椎，人人有责。每年满意度 +1，声望 +1。',
-        cost: 8, // 5 -> 8
+        cost: 8,
         passive: () => ({ satisfaction: 1, reputation: 1 })
     },
     {
         id: 'u_admin',
         name: '行政助理',
         description: '雇人处理杂事。每年资源 +1，学术 +1。',
-        cost: 15, // 8 -> 15
+        cost: 15,
         passive: () => ({ resources: 1, academic: 1 })
     },
     {
         id: 'u_lounge',
         name: '休闲区 & 游戏机',
         description: '劳逸结合。每年满意度 +2。',
-        cost: 10, // 4 -> 10
+        cost: 10,
         passive: () => ({ satisfaction: 2 })
     }
 ];
 
-// --- Titles (Promotion) - Higher Requirements ---
+// --- Titles (Promotion) ---
 export const TITLES: Title[] = [
     {
         id: 'title_lecturer',
         name: '讲师',
         level: 1,
-        condition: () => true, // Default
+        condition: () => true,
         passive: () => ({})
     },
     {
         id: 'title_associate',
         name: '副教授',
         level: 2,
-        condition: (s) => s.stats.academic >= 12 && s.stats.reputation >= 10 && s.year >= 5, // Increased from 10/8
+        condition: (s) => s.stats.academic >= 12 && s.stats.reputation >= 10 && s.year >= 5,
         passive: () => ({ resources: 1 })
     },
     {
         id: 'title_professor',
         name: '教授',
         level: 3,
-        condition: (s) => s.stats.academic >= 16 && s.stats.reputation >= 14 && s.year >= 10, // Increased from 15/12
+        condition: (s) => s.stats.academic >= 16 && s.stats.reputation >= 14 && s.year >= 10,
         passive: () => ({ resources: 1, reputation: 1 })
     },
     {
         id: 'title_distinguished',
         name: '杰出教授',
         level: 4,
-        condition: (s) => s.stats.academic >= 19 && s.stats.reputation >= 18 && s.achievements.length >= 2, // Increased from 18/16
+        condition: (s) => s.stats.academic >= 19 && s.stats.reputation >= 18 && s.achievements.length >= 2,
         passive: () => ({ resources: 2, reputation: 1 })
     },
     {
@@ -103,8 +104,34 @@ export const TITLES: Title[] = [
     }
 ];
 
-// --- Rich Endings (Updated) ---
+// --- Rich Endings ---
 export const ENDINGS: Ending[] = [
+    // Hidden Endings from DLC are handled via conditions, listed here for consistency
+    {
+        id: 'end_hidden_nobel',
+        title: '【传说】诺贝尔奖得主',
+        description: '来自斯德哥尔摩的电话改变了一切。你不仅代表了人类智慧的巅峰，更成为了国家的骄傲。',
+        condition: (s, a, t, flags) => !!flags['nobel_winner'],
+        color: 'text-amber-500',
+        bgColor: 'bg-stone-900'
+    },
+    {
+        id: 'end_hidden_minister',
+        title: '【隐藏】教育部长',
+        description: '你从学术界华丽转身，步入政坛，成为了教育政策的制定者。',
+        condition: (s, a, t, flags) => !!flags['is_minister'],
+        color: 'text-red-700',
+        bgColor: 'bg-red-50'
+    },
+    {
+        id: 'end_hidden_ai',
+        title: '【隐藏】机械飞升',
+        description: '你的意识上传到了高性能计算集群。你已不再是凡人之躯，你即是数据，你即是永恒。',
+        condition: (s, a, t, flags) => !!flags['is_ai'],
+        color: 'text-cyan-500',
+        bgColor: 'bg-slate-900'
+    },
+    // Standard Endings
     {
         id: 'end_legend_academic',
         title: '【传说】学术泰斗',
@@ -117,7 +144,6 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_educator',
         title: '【传说】万世师表',
         description: '你的学生遍布全球名校和科研机构，桃李满天下。你不仅深受爱戴，更在教育界享有崇高的声望。',
-        // Increased difficulty: Requires reputation >= 12 and academic >= 10
         condition: (s, a, t) => s.satisfaction >= 19 && s.reputation >= 12 && s.academic >= 10 && a.includes('ach_1'),
         color: 'text-pink-600',
         bgColor: 'bg-pink-50'
@@ -126,7 +152,6 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_tycoon',
         title: '【传说】产学研大亨',
         description: '你不仅学术有成，更建立了庞大的商业帝国。你的技术转化成果改变了行业，你也实现了财务自由。',
-        // Increased difficulty: Requires reputation >= 10
         condition: (s, a, t) => s.resources >= 19 && s.reputation >= 10,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50'
@@ -147,11 +172,10 @@ export const ENDINGS: Ending[] = [
         color: 'text-blue-600',
         bgColor: 'bg-blue-50'
     },
-    // New: Intermediate ending for high satisfaction but lower other stats
     {
         id: 'end_mentor',
         title: '【优秀】良师益友',
-        description: '你也许没有惊人的学术成就，但对学生无微不至的关怀改变了很多人的人生轨迹。你是学生心中最温暖的记忆。',
+        description: '你也许没有惊人的学术成就，但对学生无微不至的关怀改变了很多人的人生轨迹。',
         condition: (s, a, t) => s.satisfaction >= 16,
         color: 'text-pink-500',
         bgColor: 'bg-pink-50'
@@ -167,15 +191,14 @@ export const ENDINGS: Ending[] = [
     {
         id: 'end_good',
         title: '【普通】光荣退休',
-        description: '你勤勤恳恳工作了一辈子，虽然没有惊天动地的成就，但也问心无愧。你是学校里那个和蔼可亲的老教授。',
-        condition: () => true, // Fallback for success
+        description: '你勤勤恳恳工作了一辈子，虽然没有惊天动地的成就，但也问心无愧。',
+        condition: () => true,
         color: 'text-stone-600',
         bgColor: 'bg-stone-50'
     }
 ];
 
-
-// --- Achievements (保持原有不变) ---
+// --- Achievements ---
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'ach_1',
@@ -211,7 +234,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   }
 ];
 
-// --- Phase Evaluations (保持原有不变) ---
+// --- Phase Evaluations ---
 export const PHASE_EVALUATIONS = [
   { minYear: 1, maxYear: 5, title: '青椒生存期', desc: '在非升即走的压力下摸爬滚打。' },
   { minYear: 6, maxYear: 10, title: '骨干成长期', desc: '逐渐站稳脚跟，开始建立自己的小团队。' },
@@ -221,7 +244,7 @@ export const PHASE_EVALUATIONS = [
   { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，站好最后一班岗。' }
 ];
 
-// --- KPIs (New Up-or-Out System) - Difficulty Reduced ---
+// --- KPIs ---
 export const KPIS: KPI[] = [
     {
         year: 5,
@@ -237,36 +260,36 @@ export const KPIS: KPI[] = [
     },
     {
         year: 15,
-        description: '正高晋升压力：口碑声望 >= 12', // Lowered from 14
-        condition: (s) => s.reputation >= 12,
+        description: '正高晋升压力：口碑声望 >= 14',
+        condition: (s) => s.reputation >= 14,
         failMessage: '【解聘】长期未能晋升正高，被学校边缘化并劝退。'
     },
     {
         year: 20,
-        description: '学科带头人考核：学术 >= 15 且 资源 >= 10', // Lowered from 16/12
-        condition: (s) => s.academic >= 15 && s.resources >= 10,
+        description: '学科带头人考核：学术 >= 16 且 资源 >= 12',
+        condition: (s) => s.academic >= 16 && s.resources >= 12,
         failMessage: '【被免职】未能承担起学科建设重任，被迫提前退休。'
     },
     {
         year: 25,
-        description: '终身成就考核：任意一项属性 >= 18', // Lowered from 20
-        condition: (s) => s.academic >= 18 || s.reputation >= 18 || s.satisfaction >= 18 || s.resources >= 18,
+        description: '终身成就考核：任意一项属性满 20',
+        condition: (s) => s.academic >= 20 || s.reputation >= 20 || s.satisfaction >= 20 || s.resources >= 20,
         failMessage: '【晚节不保】临近退休未能守住晚节，被学校劝退。'
     }
 ];
 
-// --- Research Projects (New Active Strategy) - Buffed ---
+// --- Projects ---
 export const PROJECTS: ProjectDefinition[] = [
     {
         id: 'proj_youth',
         name: '青年科学基金',
         type: 'national',
-        duration: 2, // Reduced from 3
-        reqStats: { academic: 5, reputation: 4 }, // Lowered req from 6
-        costPerYear: { academic: -1 }, 
-        reward: { academic: 3, resources: 3, reputation: 2 }, // Increased rewards
+        duration: 3,
+        reqStats: { academic: 6, reputation: 4 },
+        costPerYear: { academic: -1 },
+        reward: { academic: 3, resources: 3, reputation: 1 },
         penalty: { reputation: -1 },
-        description: '年轻人的第一桶金。周期短，见效快。'
+        description: '年轻人的第一桶金。需要投入精力，导致短期学术增长变慢。'
     },
     {
         id: 'proj_corp',
@@ -274,19 +297,19 @@ export const PROJECTS: ProjectDefinition[] = [
         type: 'corporate',
         duration: 2,
         reqStats: { resources: 4, reputation: 6 },
-        costPerYear: { academic: -1 }, // Changed from satisfaction -1 (too harsh)
+        costPerYear: { satisfaction: -1 },
         reward: { resources: 5, reputation: 1 },
         penalty: { reputation: -2, resources: -2 },
-        description: '企业的加急项目。能赚大钱，稍微分散学术精力。'
+        description: '企业的加急项目。能赚大钱，但学生会被当成廉价劳动力。'
     },
     {
         id: 'proj_face',
         name: '国家面上项目',
         type: 'national',
-        duration: 3, // Reduced from 4
+        duration: 4,
         reqStats: { academic: 12, reputation: 8 },
-        costPerYear: { academic: -1 }, // Removed satisfaction cost
-        reward: { academic: 5, resources: 5, reputation: 3 }, // Good reward
+        costPerYear: { academic: -1, satisfaction: -1 },
+        reward: { academic: 5, resources: 5, reputation: 3 },
         penalty: { reputation: -3, academic: -1 },
         description: '学术界的中流砥柱。难度适中，回报丰厚。'
     },
@@ -294,12 +317,12 @@ export const PROJECTS: ProjectDefinition[] = [
         id: 'proj_key',
         name: '重点研发计划',
         type: 'national',
-        duration: 4, // Reduced from 5
+        duration: 5,
         reqStats: { academic: 16, resources: 10 },
         costPerYear: { academic: -2, resources: -1 },
-        reward: { academic: 10, resources: 10, reputation: 5 }, // Massive reward
+        reward: { academic: 8, resources: 8, reputation: 5 },
         penalty: { reputation: -5, academic: -3, resources: -3 },
-        description: '国家级大项目。极度消耗精力与资源，但回报是巨大的。'
+        description: '国家级大项目。极度消耗精力与资源，一旦烂尾将身败名裂。'
     },
     {
         id: 'proj_talent',
@@ -314,8 +337,7 @@ export const PROJECTS: ProjectDefinition[] = [
     }
 ];
 
-// --- Events Library ---
-
+// --- Basic Events ---
 const ACADEMIC_EVENTS: GameEvent[] = [
   {
     id: 'e_a1',
@@ -416,7 +438,6 @@ const ACADEMIC_EVENTS: GameEvent[] = [
       { text: '带头去寺庙祈福', description: '全组团建活动变成了烧香，大家很开心。', effect: () => ({ satisfaction: 2, reputation: -1 }) }
     ]
   },
-  // --- New Added Academic ---
   {
     id: 'e_a_new4',
     title: '天使审稿人',
@@ -585,7 +606,6 @@ const STUDENT_EVENTS: GameEvent[] = [
       { text: '教孩子用移液枪', description: '从小培养科研苗子（误）。', effect: () => ({ reputation: 1 }) }
     ]
   },
-  // --- New Added Student ---
   {
     id: 'e_s_new5',
     title: '幽灵学生',
@@ -710,7 +730,6 @@ const CAREER_EVENTS: GameEvent[] = [
       { text: '借机给学生放假', description: '样品坏了一部分，但大家都很开心。', effect: () => ({ satisfaction: 3, academic: -2 }) }
     ]
   },
-  // --- New Added Career ---
   {
     id: 'e_c_new4',
     title: '停车位之战',
@@ -753,6 +772,17 @@ const CAREER_EVENTS: GameEvent[] = [
       { text: '买个降噪耳机', description: '世界安静了，但钱包瘦了。', effect: () => ({ resources: -1, satisfaction: 1 }) },
       { text: '去投诉处拍桌子', description: '施工队答应中午停一小时。', effect: () => ({ reputation: 1 }) },
       { text: '搬到图书馆办公', description: '遇见了以前的学生，聊得很开心。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  {
+    id: 'e_c_new8',
+    title: '办公室风水局',
+    description: '你的行政助理说，你最近发不出文章是因为办公室鱼缸摆放位置不对。',
+    category: 'career',
+    choices: [
+        { text: '立即重新装修', description: '大兴土木，办公室焕然一新，心情确实好了。', effect: () => ({ resources: -2, academic: 1 }) },
+        { text: '“唯物主义战士不信这个”', description: '你把鱼缸扔了，结果第二天就摔了一跤。', effect: () => ({ satisfaction: -1 }) },
+        { text: '在鱼缸里养条锦鲤', description: '既美观又吉利。', effect: () => ({ satisfaction: 1 }) }
     ]
   }
 ];
@@ -824,7 +854,6 @@ const RESOURCE_EVENTS: GameEvent[] = [
       { text: '正好缺实验动物...（误）', description: '学生拼死护猫，差点造反。', effect: () => ({ satisfaction: -5, reputation: -2 }) }
     ]
   },
-  // --- New Added Network/Resource/Funny ---
   {
     id: 'e_n_new4',
     title: '报账地狱',
@@ -916,7 +945,6 @@ const RISK_EVENTS: GameEvent[] = [
       { text: '第一时间承担责任，升级安全', description: '获得了“安全标兵”反向激励。', effect: () => ({ resources: -2, reputation: 1 }) },
     ]
   },
-  // --- New High Risk Events ---
   {
     id: 'e_r4',
     title: '【高危】数据被质疑',
@@ -952,33 +980,8 @@ const RISK_EVENTS: GameEvent[] = [
   }
 ];
 
-// Special/Hidden Events (保持原有不变)
-const HIDDEN_EVENTS: GameEvent[] = [
-  {
-    id: 'e_h1',
-    title: '重大国家专项（隐藏）',
-    description: '由于你学术造诣极高且资源丰富，国家级重大项目找上门来。',
-    category: 'academic',
-    condition: (stats, traits) => stats.academic >= 18 && stats.resources >= 15,
-    choices: [
-      { text: '签下军令状', description: '虽然掉了一层皮，但成为了国宝级科学家。', effect: () => ({ academic: 5, reputation: 5 }) },
-      { text: '觉得太累，推辞', description: '错失良机。', effect: () => ({ reputation: -2 }) },
-    ]
-  },
-  {
-    id: 'e_h2',
-    title: '桃李满天下（隐藏）',
-    description: '你的学生在各行各业都成了大佬，回来联名给你办祝寿会。',
-    category: 'student',
-    condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
-    choices: [
-      { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
-    ]
-  }
-];
-
-// Chain Events (Triggered by Flags)
-const CHAIN_EVENTS: GameEvent[] = [
+// --- Chain Events ---
+export const CHAIN_EVENTS: GameEvent[] = [
   {
     id: 'ce_1',
     title: '陈年旧账（连锁风险）',
@@ -1045,180 +1048,6 @@ const CHAIN_EVENTS: GameEvent[] = [
   }
 ];
 
-// --- DLC EVENT PACK (30+ New Events) ---
-const DLC_EVENTS: GameEvent[] = [
-    // Academic & Tech
-    {
-        id: 'e_dlc_1',
-        title: 'GPT 论文风波',
-        description: '你发现一名硕士生的论文逻辑极其通顺，但引用的文献全是编的。',
-        category: 'academic',
-        choices: [
-            { text: '全组开展学术诚信教育', description: '杀鸡儆猴，大家学会了正确使用工具。', effect: () => ({ academic: 1, satisfaction: -1 }) },
-            { text: '勒令重写，延期毕业', description: '学生心态崩了，但守住了底线。', effect: () => ({ academic: 0, satisfaction: -2 }) },
-            { text: '自己动手帮他改', description: '你成了“超级润色机器”，累得够呛。', effect: () => ({ academic: 1, satisfaction: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_2',
-        title: '实验室搬迁',
-        description: '学校要盖新大楼，要求你们限期搬迁到临时校区（荒郊野岭）。',
-        category: 'career',
-        choices: [
-            { text: '配合学校，吃苦耐劳', description: '通勤时间+2小时，学生怨声载道。', effect: () => ({ reputation: 1, satisfaction: -3 }) },
-            { text: '赖着不走，当钉子户', description: '水电被断了，实验被迫中断。', effect: () => ({ academic: -2, resources: -1 }) },
-            { text: '争取经费，找搬家公司', description: '设备无损，但花了一大笔钱。', effect: () => ({ resources: -2, academic: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_3',
-        title: '外星信号？',
-        description: '你的射电望远镜收到了一段极似智慧生命的信号，如果是真的，将是诺奖级发现。',
-        category: 'academic',
-        choices: [
-            { text: '立刻召开新闻发布会', description: '后来发现是微波炉干扰，成了国际笑话。', effect: () => ({ reputation: -4, academic: -1 }) },
-            { text: '严谨验证，不急发声', description: '错过了热度，但保持了严谨。', effect: () => ({ academic: 1 }) },
-            { text: '写成科幻小说出版', description: '意外畅销，赚了一笔版税。', effect: () => ({ resources: 3 }) }
-        ]
-    },
-    // Student Life
-    {
-        id: 'e_dlc_4',
-        title: '学生博主',
-        description: '你发现有个学生在 B 站做 Up 主，吐槽读研生活，粉丝比你引用数还多。',
-        category: 'student',
-        choices: [
-            { text: '客串出镜，与民同乐', description: '你被做成了鬼畜视频，全网爆火。', effect: () => ({ reputation: 1, satisfaction: 2 }), setFlag: 'media_exposure' },
-            { text: '严禁泄露实验室机密', description: '学生停更了，粉丝在评论区骂你。', effect: () => ({ reputation: -1 }) },
-            { text: '让他帮忙剪辑课题组宣传片', description: '招生宣传效果拔群！', effect: () => ({ academic: 1, resources: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_5',
-        title: '相亲角的传说',
-        description: '你的学生去公园相亲角，因为发了顶刊，被大爷大妈疯抢。',
-        category: 'student',
-        choices: [
-            { text: '鼓励学生多社交', description: '学生脱单了，心情变好，效率提升。', effect: () => ({ satisfaction: 2, academic: 1 }) },
-            { text: '“有这时间不如跑胶”', description: '你被挂到了相亲群黑名单。', effect: () => ({ satisfaction: -2 }) },
-            { text: '去相亲角帮学生把关', description: '你也被大妈看上了...场面混乱。', effect: () => ({ reputation: -1, satisfaction: 1 }) }
-        ]
-    },
-    // Career & Admin
-    {
-        id: 'e_dlc_6',
-        title: '院长退休风云',
-        description: '老院长退休，新院长空降，全院面临站队。',
-        category: 'career',
-        choices: [
-            { text: '第一时间表忠心', description: '被老派系鄙视，但新院长给了点甜头。', effect: () => ({ resources: 2, reputation: -2 }) },
-            { text: '保持中立，专注学术', description: '两边都不讨好，经费被削减。', effect: () => ({ resources: -2, academic: 1 }) },
-            { text: '联合其他教授搞小团体', description: '形成了第三方势力，没人敢惹你。', effect: () => ({ reputation: 1, resources: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_7',
-        title: '空调大战',
-        description: '夏天，实验室空调坏了，报修显示要排队两周。',
-        category: 'career',
-        choices: [
-            { text: '自费买新空调', description: '学生感动得痛哭流涕，尊你为神。', effect: () => ({ satisfaction: 4, resources: -2 }) },
-            { text: '去院长办公室蹭空调', description: '顺便汇报了工作，一举两得。', effect: () => ({ academic: 1 }) },
-            { text: '发放冰块和绿豆汤', description: '治标不治本，大家无心工作。', effect: () => ({ academic: -1 }) }
-        ]
-    },
-    // Network & Funny
-    {
-        id: 'e_dlc_8',
-        title: '二手仪器捡漏',
-        description: '隔壁课题组倒闭了，有一批仪器低价处理。',
-        category: 'network',
-        choices: [
-            { text: '全盘接收', description: '虽然旧了点，但极大地扩充了产能。', effect: () => ({ resources: -2, academic: 2 }) },
-            { text: '挑挑拣拣', description: '买了个显微镜，结果是坏的。', effect: () => ({ resources: -1 }) },
-            { text: '没钱，看热闹', description: '错过了扩充实力的机会。', effect: () => ({ academic: 0 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_9',
-        title: '保安大叔的扫地僧属性',
-        description: '你看门的大叔突然指出了你黑板上公式的错误。',
-        category: 'network',
-        choices: [
-            { text: '虚心请教', description: '发现大叔是退休的高级工程师。', effect: () => ({ academic: 2, reputation: 1 }) },
-            { text: '觉得没面子，无视', description: '固步自封。', effect: () => ({ academic: -1 }) },
-            { text: '聘请为实验室顾问', description: '大叔帮忙修好了所有坏掉的仪器。', effect: () => ({ resources: 2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_10',
-        title: '断网危机',
-        description: '校园网光缆被挖掘机挖断了，全校断网三天。',
-        category: 'career',
-        choices: [
-            { text: '用手机热点坚持工作', description: '流量费爆表。', effect: () => ({ resources: -1, academic: 1 }) },
-            { text: '组织大家进行“无网团建”', description: '爬山、桌游，关系更铁了。', effect: () => ({ satisfaction: 3 }) },
-            { text: '回家睡觉', description: '难得的假期。', effect: () => ({ academic: -1, satisfaction: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_11',
-        title: '神秘的快递盲盒',
-        description: '实验室收到一个无主快递，里面是一箱昂贵的进口试剂。',
-        category: 'network',
-        choices: [
-            { text: '据为己有', description: '用得很爽，但后来发现是送错的，赔了钱。', effect: () => ({ resources: -2, academic: 1 }) },
-            { text: '全楼寻找失主', description: '找到了，对方为了感谢送了锦旗。', effect: () => ({ reputation: 1 }) },
-            { text: '放在走廊吃灰', description: '最后过期了，浪费。', effect: () => ({ resources: 0 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_12',
-        title: '学术会议的自助餐',
-        description: '你带学生参加会议，学生们拿着饭盒在自助餐疯狂打包。',
-        category: 'network',
-        choices: [
-            { text: '觉得丢人，假装不认识', description: '学生觉得你太装。', effect: () => ({ satisfaction: -1 }) },
-            { text: '加入打包队伍', description: '“这虾不错，给没来的师弟带点。”', effect: () => ({ satisfaction: 2, reputation: -1 }) },
-            { text: '制止并教育礼仪', description: '学生虽然不爽，但学会了体面。', effect: () => ({ reputation: 1 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_13',
-        title: '停水风波',
-        description: '实验楼停水，但有个反应必须用到冷凝水，否则会爆炸。',
-        category: 'risk',
-        choices: [
-            { text: '组织学生接力搬运桶装水', description: '虽然累瘫了，但实验保住了。', effect: () => ({ academic: 1, satisfaction: -1 }) },
-            { text: '紧急停止实验', description: '原料报废，损失惨重。', effect: () => ({ resources: -2 }) },
-            { text: '祈祷不要炸', description: '真的炸了。', effect: () => ({ resources: -5, reputation: -2 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_14',
-        title: '优秀毕业论文抽检',
-        description: '教育厅突然抽检上一届的硕士论文。',
-        category: 'risk',
-        choices: [
-            { text: '自信满满，随便查', description: '全部合格，获得表彰。', effect: () => ({ reputation: 2 }) },
-            { text: '连夜召回学生修改', description: '虚惊一场，但把学生折腾得够呛。', effect: () => ({ satisfaction: -2 }) },
-            { text: '发现有一篇格式不对，试图掩盖', description: '被查出来了，全院通报。', effect: () => ({ reputation: -3 }) }
-        ]
-    },
-    {
-        id: 'e_dlc_15',
-        title: '实验室闹鬼传闻',
-        description: '学生传说深夜的细胞间有哭声，没人敢做晚上的实验。',
-        category: 'student',
-        choices: [
-            { text: '带头夜宿实验室辟谣', description: '发现是离心机轴承坏了发出的声音。', effect: () => ({ satisfaction: 1, resources: -1 }) },
-            { text: '请法师...做法', description: '封建迷信，被书记谈话。', effect: () => ({ reputation: -2 }) },
-            { text: '那就不做夜间实验了', description: '进度变慢，但学生睡了个好觉。', effect: () => ({ academic: -1, satisfaction: 1 }) }
-        ]
-    },
-    // ... More filling events
-];
-
 export const EVENT_POOL = [
   ...ACADEMIC_EVENTS,
   ...STUDENT_EVENTS,
@@ -1228,4 +1057,26 @@ export const EVENT_POOL = [
   ...DLC_EVENTS
 ];
 
-export { HIDDEN_EVENTS, CHAIN_EVENTS };
+export const HIDDEN_EVENTS: GameEvent[] = [
+  {
+    id: 'e_h1',
+    title: '重大国家专项（隐藏）',
+    description: '由于你学术造诣极高且资源丰富，国家级重大项目找上门来。',
+    category: 'academic',
+    condition: (stats, traits) => stats.academic >= 18 && stats.resources >= 15,
+    choices: [
+      { text: '签下军令状', description: '虽然掉了一层皮，但成为了国宝级科学家。', effect: () => ({ academic: 5, reputation: 5 }) },
+      { text: '觉得太累，推辞', description: '错失良机。', effect: () => ({ reputation: -2 }) },
+    ]
+  },
+  {
+    id: 'e_h2',
+    title: '桃李满天下（隐藏）',
+    description: '你的学生在各行各业都成了大佬，回来联名给你办祝寿会。',
+    category: 'student',
+    condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
+    choices: [
+      { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
+    ]
+  }
+];

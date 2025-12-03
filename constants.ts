@@ -1,5 +1,5 @@
 
-import { GameEvent, Trait, Achievement, GameState, Upgrade, Title } from './types';
+import { GameEvent, Trait, Achievement, GameState, Upgrade, Title, Ending } from './types';
 
 // --- Traits (Nerfed some bonuses to +2 from +3) ---
 export const TRAITS: Trait[] = [
@@ -102,6 +102,67 @@ export const TITLES: Title[] = [
         passive: () => ({ resources: 2, reputation: 2, academic: 1 })
     }
 ];
+
+// --- Rich Endings ---
+export const ENDINGS: Ending[] = [
+    {
+        id: 'end_legend_academic',
+        title: '【传说】学术泰斗',
+        description: '你的名字被写进了教科书，成为后世仰望的灯塔。你在学术界的地位无人能撼动，是真正的国士无双。',
+        condition: (s, a, t) => s.academic >= 19 && t === 'title_academician',
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-50'
+    },
+    {
+        id: 'end_legend_educator',
+        title: '【传说】万世师表',
+        description: '你的学生遍布全球名校和科研机构，桃李满天下。每年教师节，你的邮箱都会被感谢信塞满。',
+        condition: (s, a, t) => s.satisfaction >= 19 && a.includes('ach_1'), // ach_1 is 10 students graduated
+        color: 'text-pink-600',
+        bgColor: 'bg-pink-50'
+    },
+    {
+        id: 'end_legend_tycoon',
+        title: '【传说】产学研大亨',
+        description: '你不仅学术有成，更建立了庞大的商业帝国。你的技术转化成果改变了行业，你也实现了财务自由。',
+        condition: (s, a, t) => s.resources >= 19,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50'
+    },
+    {
+        id: 'end_master_school',
+        title: '【卓越】名校校长',
+        description: '你凭借极高的声望和行政能力，成为了这所大学的掌舵人。你的教育理念深深影响了这所百岁名校。',
+        condition: (s, a, t) => s.reputation >= 18 && s.academic >= 15,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50'
+    },
+    {
+        id: 'end_expert',
+        title: '【优秀】知名教授',
+        description: '你在领域内享有盛誉，退休生活安稳富足。同行提起你时，总会竖起大拇指。',
+        condition: (s, a, t) => s.academic >= 15 || s.reputation >= 15,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50'
+    },
+    {
+        id: 'end_rich',
+        title: '【优秀】富家翁',
+        description: '虽然学术成就平平，但你凭借敏锐的商业嗅觉积累了大量财富，退休后环游世界去了。',
+        condition: (s, a, t) => s.resources >= 15,
+        color: 'text-emerald-500',
+        bgColor: 'bg-emerald-50'
+    },
+    {
+        id: 'end_good',
+        title: '【普通】光荣退休',
+        description: '你勤勤恳恳工作了一辈子，虽然没有惊天动地的成就，但也问心无愧。你是学校里那个和蔼可亲的老教授。',
+        condition: () => true, // Fallback for success
+        color: 'text-stone-600',
+        bgColor: 'bg-stone-50'
+    }
+];
+
 
 // --- Achievements (保持原有不变) ---
 export const ACHIEVEMENTS: Achievement[] = [

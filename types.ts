@@ -80,6 +80,15 @@ export interface Title {
   passive?: (stats: Stats) => Partial<Stats>;
 }
 
+export interface Ending {
+  id: string;
+  title: string;
+  description: string;
+  condition: (stats: Stats, achievements: string[], title: string) => boolean;
+  color: string;
+  bgColor: string;
+}
+
 export interface GameState {
   year: number;
   stats: Stats;
@@ -94,6 +103,7 @@ export interface GameState {
   flags: Record<string, boolean>; // For chain events
   isGameOver: boolean;
   gameOverReason?: string;
+  endingId?: string; // ID of the specific ending triggered
   upgrades: string[]; // IDs of purchased upgrades
   title: string; // ID of current title
 }

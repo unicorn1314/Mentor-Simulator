@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle } from 'lucide-react';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
-import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES } from './constants';
+import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES, ENDINGS } from './constants';
 
 // --- Helper Components ---
 
@@ -73,6 +73,7 @@ export default function App() {
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
   const [showShop, setShowShop] = useState(false);
   const [floatingTexts, setFloatingTexts] = useState<{ id: number, text: string, color: string, left: string, top: string }[]>([]);
+  const [mobileTab, setMobileTab] = useState<'career' | 'stats'>('career');
 
   // --- Visual Feedback ---
   const spawnFloatingText = useCallback((changes: Partial<Stats>) => {
@@ -146,6 +147,7 @@ export default function App() {
       title: 'title_lecturer'
     });
     setSelectedTraits([]);
+    setMobileTab('career');
   };
 
   const toggleTrait = (traitId: string) => {
@@ -283,12 +285,17 @@ export default function App() {
   };
 
   const advanceYear = (bypassSummary = false) => {
+    // Check for Retirement
     if (gameState.year >= RETIREMENT_YEAR) {
+      // Calculate Rich Ending
+      const ending = ENDINGS.find(e => e.condition(gameState.stats, gameState.achievements, gameState.title)) || ENDINGS[ENDINGS.length - 1];
+      
       setGameState(prev => ({ 
         ...prev, 
-        phase: 'GAMEOVER',
+        phase: 'ENDING',
         isGameOver: true,
-        gameOverReason: '【光荣退休】三十年教学生涯圆满结束，你培养了无数优秀人才。'
+        endingId: ending.id,
+        gameOverReason: ending.title
       }));
       return;
     }
@@ -531,7 +538,9 @@ export default function App() {
 
   const confirmResult = () => {
     if (gameState.isGameOver) {
-        setGameState(prev => ({ ...prev, phase: 'GAMEOVER', lastEventResult: null }));
+        if(gameState.phase !== 'ENDING') { // Don't reset if it's a happy ending
+            setGameState(prev => ({ ...prev, phase: 'GAMEOVER', lastEventResult: null }));
+        }
     } else {
         setGameState(prev => ({
         ...prev,
@@ -711,7 +720,7 @@ export default function App() {
                     )}
                     
                     <Button onClick={confirmResult} className="w-full">
-                        {gameState.isGameOver ? '接受命运' : '确认'}
+                        {gameState.isGameOver && gameState.phase !== 'ENDING' ? '接受命运' : '确认'}
                     </Button>
                 </div>
             </div>
@@ -800,17 +809,18 @@ export default function App() {
   };
 
   const renderGameOver = () => {
-    // Determine if it is a success (Retirement) or failure
-    const isSuccess = gameState.gameOverReason?.includes('光荣退休');
+    // Check if it is a specific ending or a generic game over
+    const ending = gameState.endingId ? ENDINGS.find(e => e.id === gameState.endingId) : null;
+    const isSuccess = gameState.phase === 'ENDING';
     const finalTitle = TITLES.find(t => t.id === gameState.title)?.name || '讲师';
 
     return (
-      <div className={`min-h-screen p-4 flex items-center justify-center ${isSuccess ? 'bg-amber-50' : 'bg-red-900'}`}>
-          <div className={`max-w-2xl w-full rounded-2xl shadow-2xl p-8 border-4 animate-in zoom-in duration-500 ${isSuccess ? 'bg-white border-amber-500 text-stone-800' : 'bg-stone-900 border-red-700 text-stone-100'}`}>
+      <div className={`min-h-screen p-4 flex items-center justify-center ${ending ? ending.bgColor : 'bg-red-900'}`}>
+          <div className={`max-w-2xl w-full rounded-2xl shadow-2xl p-8 border-4 animate-in zoom-in duration-500 ${isSuccess ? 'bg-white border-stone-200 text-stone-800' : 'bg-stone-900 border-red-700 text-stone-100'}`}>
               <div className="text-center space-y-4">
                   {isSuccess ? (
-                      <div className="mx-auto bg-amber-100 p-4 rounded-full w-24 h-24 flex items-center justify-center mb-4">
-                        <Trophy size={48} className="text-amber-500" />
+                      <div className="mx-auto bg-stone-100 p-4 rounded-full w-24 h-24 flex items-center justify-center mb-4">
+                        <Trophy size={48} className={ending?.color || 'text-stone-500'} />
                       </div>
                   ) : (
                       <div className="mx-auto bg-red-900/50 p-4 rounded-full w-24 h-24 flex items-center justify-center mb-4">
@@ -819,25 +829,22 @@ export default function App() {
                   )}
                   
                   <div className="mb-2">
-                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold border ${isSuccess ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-red-800 text-red-100 border-red-600'}`}>
+                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold border ${isSuccess ? 'bg-stone-100 text-stone-600 border-stone-200' : 'bg-red-800 text-red-100 border-red-600'}`}>
                            最终职称：{finalTitle}
                        </span>
                   </div>
 
-                  <h1 className="text-3xl md:text-5xl font-bold mb-2 font-serif">
-                      {isSuccess ? '功成身退' : '生涯终结'}
+                  <h1 className={`text-3xl md:text-5xl font-bold mb-2 font-serif ${ending ? ending.color : 'text-red-500'}`}>
+                      {ending ? ending.title : '生涯终结'}
                   </h1>
                   
-                  <p className={`text-xl md:text-2xl font-serif font-bold ${isSuccess ? 'text-amber-600' : 'text-red-400'}`}>
-                      {gameState.gameOverReason}
+                  <p className={`text-lg md:text-xl font-serif ${isSuccess ? 'text-stone-600' : 'text-red-300'}`}>
+                      {ending ? ending.description : gameState.gameOverReason}
                   </p>
                   
-                  <p className={isSuccess ? 'text-stone-500' : 'text-stone-400'}>
-                      {isSuccess 
-                        ? `你奉献了 ${gameState.year} 年青春，桃李满天下，为学术界留下了浓墨重彩的一笔。` 
-                        : `坚持了 ${gameState.year} 年，倒在了退休前夕。`
-                      }
-                  </p>
+                  {!isSuccess && <p className="text-stone-400 text-sm">
+                      坚持了 {gameState.year} 年，倒在了退休前夕。
+                  </p>}
                   
                   <div className={`py-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center border-t border-b ${isSuccess ? 'border-stone-100' : 'border-stone-800'} my-6`}>
                       <div>
@@ -859,7 +866,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-3">
-                      <Button onClick={startGame} variant={isSuccess ? 'success' : 'danger'} className="w-full py-4 text-lg">
+                      <Button onClick={startGame} variant={isSuccess ? 'primary' : 'danger'} className="w-full py-4 text-lg">
                           {isSuccess ? '开启第二人生 (重开)' : '不服！重开！'}
                       </Button>
                   </div>
@@ -876,7 +883,7 @@ export default function App() {
     );
 
     return (
-    <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden relative">
+    <div className="min-h-screen bg-stone-100 pb-20 md:pb-8 relative">
       
       {/* Floating Texts Container */}
       {floatingTexts.map(ft => (
@@ -885,17 +892,32 @@ export default function App() {
           </div>
       ))}
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
+      {/* Mobile Top Header */}
+      <div className="md:hidden bg-white border-b border-stone-200 p-4 sticky top-0 z-30 shadow-sm flex justify-between items-center">
+         <div>
+             <div className="text-xs text-stone-400 uppercase font-bold">第 {gameState.year} 年</div>
+             <div className="font-bold text-stone-800 flex items-center gap-1">
+                 <Award size={16} className="text-amber-500"/>
+                 {TITLES.find(t => t.id === gameState.title)?.name || '讲师'}
+             </div>
+         </div>
+         <div className="text-xs bg-stone-100 px-2 py-1 rounded text-stone-500 font-bold">
+             退休: {RETIREMENT_YEAR - gameState.year}年
+         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
         
-        {/* Left Column: Stats */}
-        <div className="md:col-span-4 space-y-6 relative">
+        {/* Left Column (Stats) - Hidden on mobile unless 'stats' tab is active */}
+        <div className={`md:col-span-4 space-y-6 ${mobileTab === 'stats' ? 'block' : 'hidden md:block'}`}>
             <Card className="md:sticky md:top-6">
-                <div className="mb-6 flex items-center justify-between border-b border-stone-100 pb-4">
+                {/* Desktop Header */}
+                <div className="hidden md:flex mb-6 items-center justify-between border-b border-stone-100 pb-4">
                     <h2 className="text-xl md:text-2xl font-bold serif">第 {gameState.year} 年</h2>
                     <span className="text-xs md:text-sm font-bold bg-stone-200 px-2 py-1 rounded text-stone-600">距离退休: {RETIREMENT_YEAR - gameState.year + 1}年</span>
                 </div>
-
-                <div className="mb-4">
+                
+                <div className="hidden md:block mb-4">
                     <div className="text-xs text-stone-500 uppercase font-bold mb-1">当前职称</div>
                     <div className="text-lg font-bold text-stone-800 bg-stone-50 p-2 rounded border border-stone-200 flex items-center gap-2">
                         <Award className="text-amber-500" size={20} />
@@ -952,13 +974,34 @@ export default function App() {
                     )}
                  </div>
             </div>
+
+             {/* Student List (Shown in stats tab on mobile) */}
+            <div className="grid grid-cols-1 gap-4">
+                <Card className="max-h-80 overflow-y-auto custom-scrollbar">
+                     <h3 className="font-bold text-sm text-stone-500 uppercase mb-3 flex items-center gap-2">
+                         <GraduationCap size={16} /> 在读高潜学生
+                     </h3>
+                     <div className="space-y-2">
+                        {gameState.students.filter(s => s.status === 'active').sort((a,b) => b.talent - a.talent).map(s => (
+                            <div key={s.id} className="flex justify-between items-center text-sm p-2 bg-stone-50 rounded">
+                                <span className="font-medium text-stone-700">{s.name}</span>
+                                <div className="flex gap-2 text-xs">
+                                    <span title="学术天赋" className="text-blue-600 font-bold">天:{s.talent}</span>
+                                    <span title="压力值" className={`${s.stress > 7 ? 'text-red-600' : 'text-stone-400'}`}>压:{s.stress}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {gameState.students.filter(s => s.status === 'active').length === 0 && <div className="text-stone-400 text-sm italic">暂无学生</div>}
+                     </div>
+                </Card>
+            </div>
         </div>
 
-        {/* Right Column: Main Area */}
-        <div className="md:col-span-8 flex flex-col gap-6">
+        {/* Right Column (Career) - Hidden on mobile unless 'career' tab is active */}
+        <div className={`md:col-span-8 flex flex-col gap-6 ${mobileTab === 'career' ? 'block' : 'hidden md:flex'}`}>
             {/* Action Bar */}
-            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm gap-4">
-                 <div className="font-serif italic text-stone-500 text-center sm:text-left">
+            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm gap-4 sticky top-[72px] md:top-0 z-20">
+                 <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
                  <div className="flex gap-2 w-full sm:w-auto">
@@ -974,8 +1017,8 @@ export default function App() {
                  </div>
             </div>
 
-            {/* Student List Preview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Desktop Student List Preview (Hidden on Mobile, moved to stats tab) */}
+            <div className="hidden md:grid grid-cols-2 gap-4">
                 <Card className="max-h-60 overflow-y-auto custom-scrollbar">
                      <h3 className="font-bold text-sm text-stone-500 uppercase mb-3 flex items-center gap-2">
                          <GraduationCap size={16} /> 在读高潜学生
@@ -1010,13 +1053,13 @@ export default function App() {
             </div>
 
             {/* Log Area */}
-            <Card className="flex-1 min-h-[400px] flex flex-col">
+            <Card className="flex-1 min-h-[60vh] md:min-h-[400px] flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg flex items-center gap-2">
                         <RefreshCw className="w-4 h-4" /> 生涯记录
                     </h3>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px] pr-2 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto space-y-4 max-h-[60vh] md:max-h-[400px] pr-2 custom-scrollbar">
                     {gameState.history.map((entry, idx) => (
                         <div key={idx} className={`p-3 rounded border-l-4 text-sm ${
                             entry.type === 'milestone' ? 'border-emerald-500 bg-emerald-50' :
@@ -1035,6 +1078,25 @@ export default function App() {
         </div>
 
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 flex z-40">
+           <button 
+                onClick={() => setMobileTab('career')}
+                className={`flex-1 p-4 flex flex-col items-center justify-center gap-1 ${mobileTab === 'career' ? 'text-stone-900 bg-stone-50' : 'text-stone-400'}`}
+            >
+               <ScrollText size={20} />
+               <span className="text-xs font-bold">生涯</span>
+           </button>
+           <button 
+                onClick={() => setMobileTab('stats')}
+                className={`flex-1 p-4 flex flex-col items-center justify-center gap-1 ${mobileTab === 'stats' ? 'text-stone-900 bg-stone-50' : 'text-stone-400'}`}
+            >
+               <LayoutDashboard size={20} />
+               <span className="text-xs font-bold">数据</span>
+           </button>
+      </div>
+
       {/* Modals */}
       {showShop && renderShop()}
       {gameState.phase === 'EVENT' && renderEvent()}

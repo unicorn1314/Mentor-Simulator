@@ -174,7 +174,7 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_academic',
         title: '【传说】学术泰斗',
         description: '你的名字被写进了教科书，成为后世仰望的灯塔。你在学术界的地位无人能撼动，是真正的国士无双。',
-        condition: (s, a, t) => s.academic >= 22 && t === 'title_academician',
+        condition: (s, a, t) => s.academic >= 20 && t === 'title_academician',
         color: 'text-amber-600',
         bgColor: 'bg-amber-50'
     },
@@ -190,7 +190,7 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_tycoon',
         title: '【传说】产学研大亨',
         description: '你不仅学术有成，更建立了庞大的商业帝国。你的技术转化成果改变了行业，你也实现了财务自由。',
-        condition: (s, a, t) => s.resources >= 22 && s.reputation >= 10,
+        condition: (s, a, t) => s.resources >= 20 && s.reputation >= 10,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50'
     },

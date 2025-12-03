@@ -1,3 +1,4 @@
+
 import { GameEvent } from './types';
 
 export const NEW_CHAIN_EVENTS: GameEvent[] = [

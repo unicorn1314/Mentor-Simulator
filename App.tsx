@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer, ShieldCheck } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
@@ -201,8 +202,7 @@ export default function App() {
       if (t.effect) newStats = t.effect(newStats);
     });
 
-    // Final safety check to ensure game doesn't start with Game Over stats
-    // Even if traits reduce stats, clamp them to minimum 1 at start
+    // Final safety check
     newStats.academic = Math.max(1, newStats.academic);
     newStats.reputation = Math.max(1, newStats.reputation);
     newStats.satisfaction = Math.max(1, newStats.satisfaction);
@@ -216,7 +216,6 @@ export default function App() {
         resources: newStats.resources - INITIAL_STATS.resources
     };
 
-    // Trigger visual feedback
     spawnFloatingText(changes);
 
     setGameState(prev => ({
@@ -244,19 +243,52 @@ export default function App() {
     }
 
     // 2. Check for Hidden Events
-    // Lowered probability from 0.3 to 0.05 (5%) to make them truly rare/special
+    // Lowered probability from 0.05 to 0.01 (1%) for ultra rare feel
     const hiddenTrigger = HIDDEN_EVENTS.find(e => 
       e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
 
-    if (hiddenTrigger && Math.random() < 0.05) {
+    if (hiddenTrigger && Math.random() < 0.01) {
       setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: hiddenTrigger }));
       return;
     }
 
     // 3. Pick Random Event from Pool
-    const randomIndex = Math.floor(Math.random() * EVENT_POOL.length);
-    const event = EVENT_POOL[randomIndex];
+    // Filter out risk events that have already been triggered by looking at flags
+    // This assumes constants.ts RISK events have logic to check flags, OR we can filter here.
+    // The safest way is to trust the random pick but add a safeguard for Risk events.
+    
+    let validPool = EVENT_POOL;
+    let event = null;
+    let attempts = 0;
+
+    while (!event && attempts < 5) {
+        const randomIndex = Math.floor(Math.random() * validPool.length);
+        const candidate = validPool[randomIndex];
+        
+        // If it's a risk event, perform extra check to see if we should skip it (reduce frequency)
+        if (candidate.category === 'risk') {
+            // 20% chance to actually trigger a risk event if selected, making them rarer
+            if (Math.random() < 0.2) { 
+                // Also check if condition allows (constants.ts handles one-time flag check)
+                if (!candidate.condition || candidate.condition(stats, traitIds, studentCount, flags, year)) {
+                    event = candidate;
+                }
+            }
+        } else {
+            // Normal event
+             if (!candidate.condition || candidate.condition(stats, traitIds, studentCount, flags, year)) {
+                event = candidate;
+            }
+        }
+        attempts++;
+    }
+    
+    // Fallback if loop failed
+    if (!event) {
+        event = EVENT_POOL[Math.floor(Math.random() * EVENT_POOL.length)];
+    }
+
     setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
   }, [gameState.stats, gameState.traits, gameState.studentCount, gameState.flags, gameState.year]); 
 

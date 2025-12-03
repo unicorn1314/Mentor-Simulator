@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,4 +22,19 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #a8a29e;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+}
+
+.animate-float {
+  animation: float-up 1.5s ease-out forwards;
 }

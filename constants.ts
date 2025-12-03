@@ -1,5 +1,5 @@
 
-import { GameEvent, Trait, Achievement, GameState } from './types';
+import { GameEvent, Trait, Achievement, GameState, Upgrade, Title } from './types';
 
 // --- Traits (保持原有不变) ---
 export const TRAITS: Trait[] = [
@@ -23,6 +23,84 @@ export const TRAITS: Trait[] = [
   { id: 't13', name: '社交达人', category: 'workplace', description: '酒桌文化精通，混迹各种圈子。', effect: (s) => ({ ...s, resources: s.resources + 2, reputation: s.reputation - 1 }) },
   { id: 't14', name: '行政骨干', category: 'workplace', description: '双肩挑，既做学术也做行政，权力大事务多。', effect: (s) => ({ ...s, resources: s.resources + 2, academic: s.academic - 1 }) },
   { id: 't15', name: '独行侠', category: 'workplace', description: '不站队，不混圈，全靠实力说话。', effect: (s) => ({ ...s, resources: s.resources - 2, academic: s.academic + 2 }) },
+];
+
+// --- Upgrades (Shop) ---
+export const UPGRADES: Upgrade[] = [
+    {
+        id: 'u_coffee',
+        name: '全自动咖啡机',
+        description: '实验室的燃料。每年学生满意度 +1。',
+        cost: 3,
+        passive: () => ({ satisfaction: 1 })
+    },
+    {
+        id: 'u_server',
+        name: '高性能计算集群',
+        description: '算力就是生产力。每年学术 +1。',
+        cost: 6,
+        passive: () => ({ academic: 1 })
+    },
+    {
+        id: 'u_chair',
+        name: '人体工学椅',
+        description: '保护腰椎，人人有责。每年满意度 +1，声望 +1。',
+        cost: 5,
+        passive: () => ({ satisfaction: 1, reputation: 1 })
+    },
+    {
+        id: 'u_admin',
+        name: '行政助理',
+        description: '雇人处理杂事。每年资源 +1，学术 +1。',
+        cost: 8,
+        passive: () => ({ resources: 1, academic: 1 })
+    },
+    {
+        id: 'u_lounge',
+        name: '休闲区 & 游戏机',
+        description: '劳逸结合。每年满意度 +2。',
+        cost: 4,
+        passive: () => ({ satisfaction: 2 })
+    }
+];
+
+// --- Titles (Promotion) ---
+export const TITLES: Title[] = [
+    {
+        id: 'title_lecturer',
+        name: '讲师',
+        level: 1,
+        condition: () => true, // Default
+        passive: () => ({})
+    },
+    {
+        id: 'title_associate',
+        name: '副教授',
+        level: 2,
+        condition: (s) => s.stats.academic >= 10 && s.stats.reputation >= 8 && s.year >= 5,
+        passive: () => ({ resources: 1 })
+    },
+    {
+        id: 'title_professor',
+        name: '教授',
+        level: 3,
+        condition: (s) => s.stats.academic >= 15 && s.stats.reputation >= 12 && s.year >= 10,
+        passive: () => ({ resources: 1, reputation: 1 })
+    },
+    {
+        id: 'title_distinguished',
+        name: '杰出教授',
+        level: 4,
+        condition: (s) => s.stats.academic >= 18 && s.stats.reputation >= 16 && s.achievements.length >= 2,
+        passive: () => ({ resources: 2, reputation: 1 })
+    },
+    {
+        id: 'title_academician',
+        name: '院士',
+        level: 5,
+        condition: (s) => s.stats.academic >= 20 && s.stats.reputation >= 20 && s.achievements.length >= 4,
+        passive: () => ({ resources: 2, reputation: 2, academic: 1 })
+    }
 ];
 
 // --- Achievements (保持原有不变) ---

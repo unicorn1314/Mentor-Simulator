@@ -38,7 +38,7 @@ export interface GameEvent {
 export interface LogEntry {
   year: number;
   message: string;
-  type: 'event' | 'achievement' | 'milestone' | 'risk' | 'gameover';
+  type: 'event' | 'achievement' | 'milestone' | 'risk' | 'gameover' | 'upgrade' | 'promotion';
 }
 
 export interface EventResult {
@@ -64,6 +64,22 @@ export interface Achievement {
   unlocked: boolean;
 }
 
+export interface Upgrade {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  passive?: (stats: Stats) => Partial<Stats>; // Yearly passive effect
+}
+
+export interface Title {
+  id: string;
+  name: string;
+  level: number;
+  condition: (state: GameState) => boolean;
+  passive?: (stats: Stats) => Partial<Stats>;
+}
+
 export interface GameState {
   year: number;
   stats: Stats;
@@ -78,4 +94,6 @@ export interface GameState {
   flags: Record<string, boolean>; // For chain events
   isGameOver: boolean;
   gameOverReason?: string;
+  upgrades: string[]; // IDs of purchased upgrades
+  title: string; // ID of current title
 }

@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star } from 'lucide-react';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
-import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS } from './constants';
+import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES } from './constants';
 
 // --- Helper Components ---
 
 const StatBar: React.FC<{ label: string; value: number; icon: React.ReactNode; color: string }> = ({ label, value, icon, color }) => (
-  <div className="flex items-center gap-2 mb-2">
+  <div className="flex items-center gap-2 mb-2 relative group">
     <div className={`p-2 rounded-lg ${color} text-white shadow-sm`}>{icon}</div>
     <div className="flex-1">
       <div className="flex justify-between text-sm font-bold mb-1 text-stone-700">
@@ -64,9 +65,40 @@ export default function App() {
     achievements: [],
     flags: {},
     isGameOver: false,
+    upgrades: [],
+    title: 'title_lecturer'
   });
 
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
+  const [showShop, setShowShop] = useState(false);
+  const [floatingTexts, setFloatingTexts] = useState<{ id: number, text: string, color: string, left: string, top: string }[]>([]);
+
+  // --- Visual Feedback ---
+  const spawnFloatingText = useCallback((changes: Partial<Stats>) => {
+     const newFloats: { id: number, text: string, color: string, left: string, top: string }[] = [];
+     let offset = 0;
+     
+     if (changes.academic) {
+        newFloats.push({ id: Date.now() + offset++, text: `学术 ${changes.academic > 0 ? '+' : ''}${changes.academic}`, color: changes.academic > 0 ? 'text-blue-600' : 'text-red-600', left: '20%', top: '30%' });
+     }
+     if (changes.reputation) {
+        newFloats.push({ id: Date.now() + offset++, text: `口碑 ${changes.reputation > 0 ? '+' : ''}${changes.reputation}`, color: changes.reputation > 0 ? 'text-purple-600' : 'text-red-600', left: '40%', top: '30%' });
+     }
+     if (changes.satisfaction) {
+        newFloats.push({ id: Date.now() + offset++, text: `学生 ${changes.satisfaction > 0 ? '+' : ''}${changes.satisfaction}`, color: changes.satisfaction > 0 ? 'text-pink-600' : 'text-red-600', left: '60%', top: '30%' });
+     }
+     if (changes.resources) {
+        newFloats.push({ id: Date.now() + offset++, text: `资源 ${changes.resources > 0 ? '+' : ''}${changes.resources}`, color: changes.resources > 0 ? 'text-emerald-600' : 'text-red-600', left: '80%', top: '30%' });
+     }
+
+     if (newFloats.length > 0) {
+         setFloatingTexts(prev => [...prev, ...newFloats]);
+         // Cleanup
+         setTimeout(() => {
+             setFloatingTexts(prev => prev.filter(ft => !newFloats.find(nf => nf.id === ft.id)));
+         }, 1500);
+     }
+  }, []);
 
   // --- Helpers ---
 
@@ -109,6 +141,8 @@ export default function App() {
       achievements: [],
       flags: {},
       isGameOver: false,
+      upgrades: [],
+      title: 'title_lecturer'
     });
     setSelectedTraits([]);
   };
@@ -220,6 +254,21 @@ export default function App() {
     return { newStudents, logMessages, statChanges };
   };
 
+  const buyUpgrade = (upgradeId: string) => {
+      const upgrade = UPGRADES.find(u => u.id === upgradeId);
+      if (!upgrade) return;
+      
+      if (gameState.stats.resources >= upgrade.cost) {
+          setGameState(prev => ({
+              ...prev,
+              stats: { ...prev.stats, resources: prev.stats.resources - upgrade.cost },
+              upgrades: [...prev.upgrades, upgradeId],
+              history: [{ year: prev.year, message: `建设：购买了 ${upgrade.name}`, type: 'upgrade' }, ...prev.history]
+          }));
+          spawnFloatingText({ resources: -upgrade.cost });
+      }
+  };
+
   const advanceYear = (bypassSummary = false) => {
     if (gameState.year >= RETIREMENT_YEAR) {
       setGameState(prev => ({ 
@@ -237,7 +286,6 @@ export default function App() {
     }
 
     // Check for 5-Year Summary Phase
-    // Loop fix: if bypassSummary is true, we skip this block and force advancement
     if (!bypassSummary && gameState.year % 5 === 0 && gameState.phase !== 'SUMMARY') {
         setGameState(prev => ({ ...prev, phase: 'SUMMARY' }));
         return;
@@ -252,18 +300,54 @@ export default function App() {
     let traitLogs: LogEntry[] = [];
     const traitIds = gameState.traits.map(t => t.id);
 
-    // Synergy: Social + Admin (t13 + t14)
+    // Synergy: Social + Admin
     if (traitIds.includes('t13') && traitIds.includes('t14')) {
         passiveChanges.resources = (passiveChanges.resources || 0) + 1;
     }
-    // Passive: Loner (t15)
+    // Passive: Loner
     if (traitIds.includes('t15') && Math.random() < 0.2) {
         passiveChanges.academic = (passiveChanges.academic || 0) + 1;
         passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) - 1;
         traitLogs.push({ year: nextYear, message: '因特质【独行侠】，独自攻克难题但忽略了学生。', type: 'event' });
     }
 
-    // 2. Student Lifecycle
+    // 2. Upgrades Passives
+    gameState.upgrades.forEach(uid => {
+        const u = UPGRADES.find(def => def.id === uid);
+        if (u && u.passive) {
+            const effect = u.passive(gameState.stats);
+            passiveChanges.academic = (passiveChanges.academic || 0) + (effect.academic || 0);
+            passiveChanges.reputation = (passiveChanges.reputation || 0) + (effect.reputation || 0);
+            passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) + (effect.satisfaction || 0);
+            passiveChanges.resources = (passiveChanges.resources || 0) + (effect.resources || 0);
+        }
+    });
+
+    // 3. Title Passives
+    const currentTitleDef = TITLES.find(t => t.id === gameState.title);
+    if (currentTitleDef && currentTitleDef.passive) {
+        const effect = currentTitleDef.passive(gameState.stats);
+        passiveChanges.academic = (passiveChanges.academic || 0) + (effect.academic || 0);
+        passiveChanges.reputation = (passiveChanges.reputation || 0) + (effect.reputation || 0);
+        passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) + (effect.satisfaction || 0);
+        passiveChanges.resources = (passiveChanges.resources || 0) + (effect.resources || 0);
+    }
+
+    // 4. Check Promotion
+    let nextTitleId = gameState.title;
+    let promotionLog: LogEntry | null = null;
+    const currentLevel = currentTitleDef?.level || 1;
+    
+    // Check titles with higher level
+    const nextTitle = TITLES.find(t => t.level === currentLevel + 1);
+    if (nextTitle && nextTitle.condition(gameState)) {
+        nextTitleId = nextTitle.id;
+        promotionLog = { year: nextYear, message: `恭喜！你晋升为【${nextTitle.name}】！`, type: 'promotion' };
+        // Initial bonus for promotion could be added here if we wanted
+    }
+
+
+    // 5. Student Lifecycle
     const { newStudents, logMessages, statChanges } = processStudentLifecycle(gameState.stats, gameState.students, nextYear);
     
     // Recruit new students
@@ -272,13 +356,20 @@ export default function App() {
         newStudents.push(generateStudent(nextYear));
     }
 
-    // 3. Apply Changes (Allow going below 0 for Game Over check)
+    // 6. Apply Changes (Allow going below 0 for Game Over check)
     const finalStats = {
         academic: gameState.stats.academic + (passiveChanges.academic || 0) + (statChanges.academic || 0),
         reputation: gameState.stats.reputation + (passiveChanges.reputation || 0) + (statChanges.reputation || 0),
         satisfaction: gameState.stats.satisfaction + (passiveChanges.satisfaction || 0) + (statChanges.satisfaction || 0),
         resources: gameState.stats.resources + (passiveChanges.resources || 0) + (statChanges.resources || 0),
     };
+
+    spawnFloatingText({
+        academic: (passiveChanges.academic || 0) + (statChanges.academic || 0),
+        reputation: (passiveChanges.reputation || 0) + (statChanges.reputation || 0),
+        satisfaction: (passiveChanges.satisfaction || 0) + (statChanges.satisfaction || 0),
+        resources: (passiveChanges.resources || 0) + (statChanges.resources || 0)
+    });
     
     // Check Game Over immediately after year processing
     const gameOverCheck = checkGameOver(finalStats);
@@ -300,11 +391,11 @@ export default function App() {
     finalStats.satisfaction = Math.min(20, finalStats.satisfaction);
     finalStats.resources = Math.min(20, finalStats.resources);
 
-    // 4. Check Achievements
+    // 7. Check Achievements
     let unlockedAchievs = [...gameState.achievements];
     let achievLogs: LogEntry[] = [];
     
-    const tempStateForCheck = { ...gameState, stats: finalStats, students: newStudents, year: nextYear }; // Approx state for check
+    const tempStateForCheck = { ...gameState, stats: finalStats, students: newStudents, year: nextYear }; 
     
     ACHIEVEMENTS.forEach(ach => {
         if (!unlockedAchievs.includes(ach.id) && ach.condition(tempStateForCheck)) {
@@ -318,6 +409,9 @@ export default function App() {
             }
         }
     });
+    
+    const allLogs = [...achievLogs, ...logMessages, ...traitLogs];
+    if (promotionLog) allLogs.push(promotionLog);
 
     setGameState(prev => ({
       ...prev,
@@ -326,8 +420,9 @@ export default function App() {
       students: newStudents,
       achievements: unlockedAchievs,
       studentCount: newStudents.filter(s => s.status === 'active').length,
-      history: [...achievLogs, ...logMessages, ...traitLogs, ...prev.history],
-      phase: 'PLAYING'
+      history: [...allLogs, ...prev.history],
+      phase: 'PLAYING',
+      title: nextTitleId
     }));
 
     // Trigger event after short delay
@@ -339,7 +434,8 @@ export default function App() {
   const handleChoice = (effect: (s: Stats) => Partial<Stats>, choiceText: string, resultText?: string, setFlag?: string, removeFlag?: string) => {
     const changes = effect(gameState.stats);
     
-    // Apply changes without clamping min to 0 initially to catch game over
+    spawnFloatingText(changes);
+
     const newStats = {
       academic: Math.min(20, gameState.stats.academic + (changes.academic || 0)),
       reputation: Math.min(20, gameState.stats.reputation + (changes.reputation || 0)),
@@ -366,18 +462,15 @@ export default function App() {
             phase: 'GAMEOVER',
             isGameOver: true,
             gameOverReason: gameOverCheck.reason,
-            lastEventResult: { text: resultText || '发生了意想不到的事情...', changes }, // Show result then die? No, jump straight to die or show result then die.
-            // Let's go to result first, then clicking confirm goes to gameover.
+            lastEventResult: { text: resultText || '发生了意想不到的事情...', changes }, 
         }));
-        // We override the phase in the state update below, but wait, if I set RESULT phase, confirmResult needs to know to go to GAMEOVER.
-        // Actually simpler: Set Result, and in confirmResult check game over.
     }
     
     setGameState(prev => ({
       ...prev,
       stats: newStats,
       flags: newFlags,
-      phase: gameOverCheck.isOver ? 'RESULT' : 'RESULT', // Always show result first
+      phase: gameOverCheck.isOver ? 'RESULT' : 'RESULT', 
       currentEvent: null,
       lastEventResult: { text: resultText || '发生了意想不到的事情...', changes },
       history: [
@@ -519,9 +612,6 @@ export default function App() {
                                 className="w-full text-left p-4 rounded-lg border-2 border-stone-200 hover:border-stone-800 hover:bg-stone-50 transition-all group active:bg-stone-100"
                             >
                                 <span className="font-bold text-stone-800 block mb-1 group-hover:translate-x-1 transition-transform">➢ {choice.text}</span>
-                                {gameState.traits.some(t => t.id === 't3') && ( // Example of trait aiding player
-                                    <span className="text-xs text-stone-400 italic">可能影响: {choice.description ? '查看后果提示' : '未知'}</span>
-                                )}
                             </button>
                         ))}
                     </div>
@@ -569,6 +659,45 @@ export default function App() {
             </div>
         </div>
     );
+  };
+
+  const renderShop = () => {
+      return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-stone-800 animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+                <div className="bg-stone-800 text-white p-4 flex justify-between items-center">
+                    <h3 className="text-xl font-bold flex items-center gap-2"><ShoppingCart /> 实验室建设 (经费: {gameState.stats.resources})</h3>
+                    <button onClick={() => setShowShop(false)} className="text-white hover:text-stone-300 font-bold">关闭</button>
+                </div>
+                <div className="p-6 overflow-y-auto grid grid-cols-1 gap-4">
+                    {UPGRADES.map(upgrade => {
+                        const isBought = gameState.upgrades.includes(upgrade.id);
+                        const canAfford = gameState.stats.resources >= upgrade.cost;
+                        return (
+                            <div key={upgrade.id} className={`flex justify-between items-center p-4 border-2 rounded-lg ${isBought ? 'bg-stone-100 border-stone-200 opacity-70' : 'bg-white border-stone-200'}`}>
+                                <div>
+                                    <div className="font-bold text-lg">{upgrade.name}</div>
+                                    <div className="text-sm text-stone-500">{upgrade.description}</div>
+                                </div>
+                                {isBought ? (
+                                    <span className="text-green-600 font-bold flex items-center gap-1"><CheckCircle2 size={16}/> 已拥有</span>
+                                ) : (
+                                    <Button 
+                                        onClick={() => buyUpgrade(upgrade.id)} 
+                                        disabled={!canAfford} 
+                                        variant={canAfford ? 'primary' : 'secondary'}
+                                        className="py-2 px-4 text-sm"
+                                    >
+                                        购买 ({upgrade.cost} 经费)
+                                    </Button>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        </div>
+      )
   };
 
   const renderSummary = () => {
@@ -668,11 +797,6 @@ export default function App() {
                       <Button onClick={startGame} variant={isSuccess ? 'success' : 'danger'} className="w-full py-4 text-lg">
                           {isSuccess ? '开启第二人生 (重开)' : '不服！重开！'}
                       </Button>
-                      {isSuccess && (
-                          <div className="text-sm text-stone-400 pt-2">
-                              感谢游玩！期待你的下一个学术巅峰。
-                          </div>
-                      )}
                   </div>
               </div>
           </div>
@@ -681,7 +805,15 @@ export default function App() {
   };
 
   const renderDashboard = () => (
-    <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden">
+    <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden relative">
+      
+      {/* Floating Texts Container */}
+      {floatingTexts.map(ft => (
+          <div key={ft.id} className={`fixed z-[100] font-bold text-xl pointer-events-none animate-float ${ft.color}`} style={{ left: ft.left, top: ft.top }}>
+              {ft.text}
+          </div>
+      ))}
+
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Left Column: Stats */}
@@ -690,6 +822,14 @@ export default function App() {
                 <div className="mb-6 flex items-center justify-between border-b border-stone-100 pb-4">
                     <h2 className="text-xl md:text-2xl font-bold serif">第 {gameState.year} 年</h2>
                     <span className="text-xs md:text-sm font-bold bg-stone-200 px-2 py-1 rounded text-stone-600">距离退休: {RETIREMENT_YEAR - gameState.year + 1}年</span>
+                </div>
+
+                <div className="mb-4">
+                    <div className="text-xs text-stone-500 uppercase font-bold mb-1">当前职称</div>
+                    <div className="text-lg font-bold text-stone-800 bg-stone-50 p-2 rounded border border-stone-200 flex items-center gap-2">
+                        <Award className="text-amber-500" size={20} />
+                        {TITLES.find(t => t.id === gameState.title)?.name || '讲师'}
+                    </div>
                 </div>
 
                 <StatBar label="学术造诣" value={gameState.stats.academic} icon={<BookOpen size={18} />} color="bg-blue-600" />
@@ -750,9 +890,14 @@ export default function App() {
                  <div className="font-serif italic text-stone-500 text-center sm:text-left">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="w-full sm:w-auto">
-                    {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
-                 </Button>
+                 <div className="flex gap-2 w-full sm:w-auto">
+                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none">
+                         <ShoppingCart size={18} /> 建设
+                     </Button>
+                     <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="flex-1 sm:flex-none">
+                        {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
+                     </Button>
+                 </div>
             </div>
 
             {/* Student List Preview */}
@@ -803,6 +948,8 @@ export default function App() {
                             entry.type === 'milestone' ? 'border-emerald-500 bg-emerald-50' :
                             entry.type === 'achievement' ? 'border-amber-500 bg-amber-50' :
                             entry.type === 'risk' ? 'border-red-500 bg-red-50' :
+                            entry.type === 'promotion' ? 'border-purple-500 bg-purple-50' :
+                            entry.type === 'upgrade' ? 'border-blue-500 bg-blue-50' :
                             entry.type === 'event' ? 'border-blue-400 bg-white' : 'border-stone-200'
                         }`}>
                             <span className="text-stone-400 font-mono text-xs mr-2">YEAR {entry.year}</span>
@@ -815,6 +962,7 @@ export default function App() {
 
       </div>
       {/* Modals */}
+      {showShop && renderShop()}
       {gameState.phase === 'EVENT' && renderEvent()}
       {gameState.phase === 'RESULT' && renderResult()}
       {gameState.phase === 'SUMMARY' && renderSummary()}

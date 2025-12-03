@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
@@ -53,6 +52,10 @@ const STAT_LABELS: Record<string, string> = {
   satisfaction: '学生',
   resources: '资源'
 };
+
+// --- Name Generation Helpers ---
+const SURNAMES = "赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜".split("");
+const GIVEN_NAMES = "伟芳娜敏静秀强磊洋艳勇军杰娟涛明超霞平刚桂英华强红玉兰竹山河海波宁远博文雅婷子轩浩然欣怡若雨梓涵一诺星宇".split("");
 
 // --- Main App ---
 
@@ -116,12 +119,21 @@ export default function App() {
 
   const generateStudent = (year: number): Student => {
     const id = Math.random().toString(36).substr(2, 9);
+    // Generate Chinese Name
+    const surname = SURNAMES[Math.floor(Math.random() * SURNAMES.length)];
+    const nameLen = Math.random() > 0.4 ? 2 : 1; // 60% chance for 2-char given name
+    let givenName = "";
+    for(let i=0; i<nameLen; i++) {
+        givenName += GIVEN_NAMES[Math.floor(Math.random() * GIVEN_NAMES.length)];
+    }
+    const name = surname + givenName;
+
     // Random talent and stress based on initial bell curveish logic
     const talent = Math.floor(Math.random() * 6) + 3; // 3-8
     const stress = Math.floor(Math.random() * 4) + 2; // 2-5
     return {
       id,
-      name: `学生-${id.substr(0,4).toUpperCase()}`,
+      name,
       talent,
       stress,
       status: 'active',
@@ -1042,6 +1054,14 @@ export default function App() {
         !gameState.upgrades.includes(u.id) && gameState.stats.resources >= u.cost
     );
 
+    // Check for available projects (if no active project and has project meeting requirements)
+    const hasAvailableProject = !gameState.activeProject && PROJECTS.some(p => 
+        (!p.reqStats.academic || gameState.stats.academic >= p.reqStats.academic) &&
+        (!p.reqStats.reputation || gameState.stats.reputation >= p.reqStats.reputation) &&
+        (!p.reqStats.resources || gameState.stats.resources >= p.reqStats.resources) &&
+        (!p.reqStats.satisfaction || gameState.stats.satisfaction >= p.reqStats.satisfaction)
+    );
+
     // KPI Calc
     const currentKPIIndex = Math.floor((gameState.year - 1) / 5);
     const nextKPITarget = KPIS[currentKPIIndex];
@@ -1175,6 +1195,9 @@ export default function App() {
                  <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
                      <Button onClick={() => setShowProjects(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
                          <FileText size={18} className="hidden md:inline" /> 申报
+                         {hasAvailableProject && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white"></span>
+                         )}
                      </Button>
                      <Button onClick={() => setShowShop(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
                          <ShoppingCart size={18} className="hidden md:inline" /> 建设

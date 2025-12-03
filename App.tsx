@@ -300,15 +300,22 @@ export default function App() {
     return { newStudents, logMessages, statChanges };
   };
 
-  const buyUpgrade = (upgradeId: string) => {
+const buyUpgrade = (upgradeId: string) => {
       const upgrade = UPGRADES.find(u => u.id === upgradeId);
       if (!upgrade) return;
       
       if (gameState.stats.resources >= upgrade.cost) {
+          // [Logic Added Here] Check for insurance upgrade and set flag
+          const newFlags = { ...gameState.flags };
+          if (upgradeId === 'u_insurance') {
+              newFlags['has_insurance'] = true;
+          }
+
           setGameState(prev => ({
               ...prev,
               stats: { ...prev.stats, resources: prev.stats.resources - upgrade.cost },
               upgrades: [...prev.upgrades, upgradeId],
+              flags: newFlags, // Update flags state
               history: [{ year: prev.year, message: `建设：购买了 ${upgrade.name}`, type: 'upgrade' }, ...prev.history]
           }));
           spawnFloatingText({ resources: -upgrade.cost });

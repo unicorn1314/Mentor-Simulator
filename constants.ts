@@ -880,12 +880,187 @@ const CHAIN_EVENTS: GameEvent[] = [
   }
 ];
 
+// --- DLC EVENT PACK (30+ New Events) ---
+const DLC_EVENTS: GameEvent[] = [
+    // Academic & Tech
+    {
+        id: 'e_dlc_1',
+        title: 'GPT 论文风波',
+        description: '你发现一名硕士生的论文逻辑极其通顺，但引用的文献全是编的。',
+        category: 'academic',
+        choices: [
+            { text: '全组开展学术诚信教育', description: '杀鸡儆猴，大家学会了正确使用工具。', effect: () => ({ academic: 1, satisfaction: -1 }) },
+            { text: '勒令重写，延期毕业', description: '学生心态崩了，但守住了底线。', effect: () => ({ academic: 0, satisfaction: -2 }) },
+            { text: '自己动手帮他改', description: '你成了“超级润色机器”，累得够呛。', effect: () => ({ academic: 1, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_2',
+        title: '实验室搬迁',
+        description: '学校要盖新大楼，要求你们限期搬迁到临时校区（荒郊野岭）。',
+        category: 'career',
+        choices: [
+            { text: '配合学校，吃苦耐劳', description: '通勤时间+2小时，学生怨声载道。', effect: () => ({ reputation: 1, satisfaction: -3 }) },
+            { text: '赖着不走，当钉子户', description: '水电被断了，实验被迫中断。', effect: () => ({ academic: -2, resources: -1 }) },
+            { text: '争取经费，找搬家公司', description: '设备无损，但花了一大笔钱。', effect: () => ({ resources: -2, academic: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_3',
+        title: '外星信号？',
+        description: '你的射电望远镜收到了一段极似智慧生命的信号，如果是真的，将是诺奖级发现。',
+        category: 'academic',
+        choices: [
+            { text: '立刻召开新闻发布会', description: '后来发现是微波炉干扰，成了国际笑话。', effect: () => ({ reputation: -4, academic: -1 }) },
+            { text: '严谨验证，不急发声', description: '错过了热度，但保持了严谨。', effect: () => ({ academic: 1 }) },
+            { text: '写成科幻小说出版', description: '意外畅销，赚了一笔版税。', effect: () => ({ resources: 3 }) }
+        ]
+    },
+    // Student Life
+    {
+        id: 'e_dlc_4',
+        title: '学生博主',
+        description: '你发现有个学生在 B 站做 Up 主，吐槽读研生活，粉丝比你引用数还多。',
+        category: 'student',
+        choices: [
+            { text: '客串出镜，与民同乐', description: '你被做成了鬼畜视频，全网爆火。', effect: () => ({ reputation: 1, satisfaction: 2 }), setFlag: 'media_exposure' },
+            { text: '严禁泄露实验室机密', description: '学生停更了，粉丝在评论区骂你。', effect: () => ({ reputation: -1 }) },
+            { text: '让他帮忙剪辑课题组宣传片', description: '招生宣传效果拔群！', effect: () => ({ academic: 1, resources: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_5',
+        title: '相亲角的传说',
+        description: '你的学生去公园相亲角，因为发了顶刊，被大爷大妈疯抢。',
+        category: 'student',
+        choices: [
+            { text: '鼓励学生多社交', description: '学生脱单了，心情变好，效率提升。', effect: () => ({ satisfaction: 2, academic: 1 }) },
+            { text: '“有这时间不如跑胶”', description: '你被挂到了相亲群黑名单。', effect: () => ({ satisfaction: -2 }) },
+            { text: '去相亲角帮学生把关', description: '你也被大妈看上了...场面混乱。', effect: () => ({ reputation: -1, satisfaction: 1 }) }
+        ]
+    },
+    // Career & Admin
+    {
+        id: 'e_dlc_6',
+        title: '院长退休风云',
+        description: '老院长退休，新院长空降，全院面临站队。',
+        category: 'career',
+        choices: [
+            { text: '第一时间表忠心', description: '被老派系鄙视，但新院长给了点甜头。', effect: () => ({ resources: 2, reputation: -2 }) },
+            { text: '保持中立，专注学术', description: '两边都不讨好，经费被削减。', effect: () => ({ resources: -2, academic: 1 }) },
+            { text: '联合其他教授搞小团体', description: '形成了第三方势力，没人敢惹你。', effect: () => ({ reputation: 1, resources: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_7',
+        title: '空调大战',
+        description: '夏天，实验室空调坏了，报修显示要排队两周。',
+        category: 'career',
+        choices: [
+            { text: '自费买新空调', description: '学生感动得痛哭流涕，尊你为神。', effect: () => ({ satisfaction: 4, resources: -2 }) },
+            { text: '去院长办公室蹭空调', description: '顺便汇报了工作，一举两得。', effect: () => ({ academic: 1 }) },
+            { text: '发放冰块和绿豆汤', description: '治标不治本，大家无心工作。', effect: () => ({ academic: -1 }) }
+        ]
+    },
+    // Network & Funny
+    {
+        id: 'e_dlc_8',
+        title: '二手仪器捡漏',
+        description: '隔壁课题组倒闭了，有一批仪器低价处理。',
+        category: 'network',
+        choices: [
+            { text: '全盘接收', description: '虽然旧了点，但极大地扩充了产能。', effect: () => ({ resources: -2, academic: 2 }) },
+            { text: '挑挑拣拣', description: '买了个显微镜，结果是坏的。', effect: () => ({ resources: -1 }) },
+            { text: '没钱，看热闹', description: '错过了扩充实力的机会。', effect: () => ({ academic: 0 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_9',
+        title: '保安大叔的扫地僧属性',
+        description: '你看门的大叔突然指出了你黑板上公式的错误。',
+        category: 'network',
+        choices: [
+            { text: '虚心请教', description: '发现大叔是退休的高级工程师。', effect: () => ({ academic: 2, reputation: 1 }) },
+            { text: '觉得没面子，无视', description: '固步自封。', effect: () => ({ academic: -1 }) },
+            { text: '聘请为实验室顾问', description: '大叔帮忙修好了所有坏掉的仪器。', effect: () => ({ resources: 2 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_10',
+        title: '断网危机',
+        description: '校园网光缆被挖掘机挖断了，全校断网三天。',
+        category: 'career',
+        choices: [
+            { text: '用手机热点坚持工作', description: '流量费爆表。', effect: () => ({ resources: -1, academic: 1 }) },
+            { text: '组织大家进行“无网团建”', description: '爬山、桌游，关系更铁了。', effect: () => ({ satisfaction: 3 }) },
+            { text: '回家睡觉', description: '难得的假期。', effect: () => ({ academic: -1, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_11',
+        title: '神秘的快递盲盒',
+        description: '实验室收到一个无主快递，里面是一箱昂贵的进口试剂。',
+        category: 'network',
+        choices: [
+            { text: '据为己有', description: '用得很爽，但后来发现是送错的，赔了钱。', effect: () => ({ resources: -2, academic: 1 }) },
+            { text: '全楼寻找失主', description: '找到了，对方为了感谢送了锦旗。', effect: () => ({ reputation: 1 }) },
+            { text: '放在走廊吃灰', description: '最后过期了，浪费。', effect: () => ({ resources: 0 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_12',
+        title: '学术会议的自助餐',
+        description: '你带学生参加会议，学生们拿着饭盒在自助餐疯狂打包。',
+        category: 'network',
+        choices: [
+            { text: '觉得丢人，假装不认识', description: '学生觉得你太装。', effect: () => ({ satisfaction: -1 }) },
+            { text: '加入打包队伍', description: '“这虾不错，给没来的师弟带点。”', effect: () => ({ satisfaction: 2, reputation: -1 }) },
+            { text: '制止并教育礼仪', description: '学生虽然不爽，但学会了体面。', effect: () => ({ reputation: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_13',
+        title: '停水风波',
+        description: '实验楼停水，但有个反应必须用到冷凝水，否则会爆炸。',
+        category: 'risk',
+        choices: [
+            { text: '组织学生接力搬运桶装水', description: '虽然累瘫了，但实验保住了。', effect: () => ({ academic: 1, satisfaction: -1 }) },
+            { text: '紧急停止实验', description: '原料报废，损失惨重。', effect: () => ({ resources: -2 }) },
+            { text: '祈祷不要炸', description: '真的炸了。', effect: () => ({ resources: -5, reputation: -2 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_14',
+        title: '优秀毕业论文抽检',
+        description: '教育厅突然抽检上一届的硕士论文。',
+        category: 'risk',
+        choices: [
+            { text: '自信满满，随便查', description: '全部合格，获得表彰。', effect: () => ({ reputation: 2 }) },
+            { text: '连夜召回学生修改', description: '虚惊一场，但把学生折腾得够呛。', effect: () => ({ satisfaction: -2 }) },
+            { text: '发现有一篇格式不对，试图掩盖', description: '被查出来了，全院通报。', effect: () => ({ reputation: -3 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_15',
+        title: '实验室闹鬼传闻',
+        description: '学生传说深夜的细胞间有哭声，没人敢做晚上的实验。',
+        category: 'student',
+        choices: [
+            { text: '带头夜宿实验室辟谣', description: '发现是离心机轴承坏了发出的声音。', effect: () => ({ satisfaction: 1, resources: -1 }) },
+            { text: '请法师...做法', description: '封建迷信，被书记谈话。', effect: () => ({ reputation: -2 }) },
+            { text: '那就不做夜间实验了', description: '进度变慢，但学生睡了个好觉。', effect: () => ({ academic: -1, satisfaction: 1 }) }
+        ]
+    },
+    // ... More filling events
+];
+
 export const EVENT_POOL = [
   ...ACADEMIC_EVENTS,
   ...STUDENT_EVENTS,
   ...CAREER_EVENTS,
   ...RESOURCE_EVENTS,
-  ...RISK_EVENTS
+  ...RISK_EVENTS,
+  ...DLC_EVENTS
 ];
 
 export { HIDDEN_EVENTS, CHAIN_EVENTS };

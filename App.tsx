@@ -31,7 +31,7 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ chi
 );
 
 const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant?: 'primary' | 'secondary' | 'danger' | 'success'; disabled?: boolean; className?: string }> = ({ onClick, children, variant = 'primary', disabled = false, className = '' }) => {
-  const baseStyle = "px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 border-2 flex justify-center items-center gap-2 select-none";
+  const baseStyle = "px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 border-2 flex justify-center items-center gap-2 select-none relative";
   const variants = {
     primary: "bg-stone-800 text-white border-stone-800 hover:bg-stone-700 disabled:bg-stone-400 disabled:border-stone-400",
     secondary: "bg-white text-stone-800 border-stone-300 hover:bg-stone-50 disabled:text-stone-400",
@@ -148,10 +148,19 @@ export default function App() {
   };
 
   const toggleTrait = (traitId: string) => {
+    const trait = TRAITS.find(t => t.id === traitId);
+    if (!trait) return;
+
     if (selectedTraits.includes(traitId)) {
+      // Allow unselecting
       setSelectedTraits(prev => prev.filter(id => id !== traitId));
     } else {
-      if (selectedTraits.length < 3) {
+      // Check if a trait of this category is already selected
+      const selectedObjs = TRAITS.filter(t => selectedTraits.includes(t.id));
+      const hasCategory = selectedObjs.some(t => t.category === trait.category);
+      
+      // Only allow if category not yet selected and total < 3
+      if (!hasCategory && selectedTraits.length < 3) {
         setSelectedTraits(prev => [...prev, traitId]);
       }
     }
@@ -536,39 +545,51 @@ export default function App() {
   const renderCreation = () => (
     <div className="min-h-screen bg-stone-100 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-stone-800 serif text-center md:text-left">请选择 3 个初始特质</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-stone-800 serif text-center md:text-left">请选择 3 个初始特质 (每类各选一个)</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-24 md:mb-8">
             {/* Group by category */}
-            {(['professional', 'mentorship', 'workplace'] as const).map(cat => (
-                <div key={cat} className="space-y-3">
-                    <h3 className="font-bold text-stone-500 uppercase text-sm tracking-wider mb-2">
-                        {cat === 'professional' ? '专业能力' : cat === 'mentorship' ? '育人风格' : '职场生存'}
-                    </h3>
-                    {TRAITS.filter(t => t.category === cat).map(trait => (
-                        <div 
-                            key={trait.id}
-                            onClick={() => toggleTrait(trait.id)}
-                            className={`
-                                p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all
-                                ${selectedTraits.includes(trait.id) 
-                                    ? 'bg-stone-800 border-stone-800 text-white shadow-lg scale-105' 
-                                    : 'bg-white border-stone-200 text-stone-600 hover:border-stone-400'}
-                                ${selectedTraits.length >= 3 && !selectedTraits.includes(trait.id) ? 'opacity-50 cursor-not-allowed' : ''}
-                            `}
-                        >
-                            <div className="font-bold text-base md:text-lg mb-1">{trait.name}</div>
-                            <div className="text-xs opacity-80">{trait.description}</div>
-                        </div>
-                    ))}
-                </div>
-            ))}
+            {(['professional', 'mentorship', 'workplace'] as const).map(cat => {
+                const isCatSelected = selectedTraits.some(id => TRAITS.find(t => t.id === id)?.category === cat);
+                return (
+                    <div key={cat} className="space-y-3">
+                        <h3 className="font-bold text-stone-500 uppercase text-sm tracking-wider mb-2">
+                            {cat === 'professional' ? '专业能力' : cat === 'mentorship' ? '育人风格' : '职场生存'}
+                            {isCatSelected ? <span className="text-green-600 ml-2">✓</span> : ''}
+                        </h3>
+                        {TRAITS.filter(t => t.category === cat).map(trait => {
+                            const isSelected = selectedTraits.includes(trait.id);
+                            // Disable if not selected BUT category is already filled
+                            const isDisabled = !isSelected && isCatSelected;
+
+                            return (
+                                <div 
+                                    key={trait.id}
+                                    onClick={() => !isDisabled && toggleTrait(trait.id)}
+                                    className={`
+                                        p-3 md:p-4 rounded-lg border-2 transition-all relative
+                                        ${isSelected
+                                            ? 'bg-stone-800 border-stone-800 text-white shadow-lg scale-105 z-10' 
+                                            : isDisabled 
+                                                ? 'bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed opacity-60'
+                                                : 'bg-white border-stone-200 text-stone-600 hover:border-stone-400 cursor-pointer hover:scale-[1.02]'}
+                                    `}
+                                >
+                                    <div className="font-bold text-base md:text-lg mb-1">{trait.name}</div>
+                                    <div className="text-xs opacity-80">{trait.description}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            })}
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-4 md:static bg-white/90 backdrop-blur border-t-2 border-stone-200 md:border-t-0 md:bg-transparent md:backdrop-blur-none z-10">
           <div className="max-w-4xl mx-auto flex justify-between items-center bg-white md:p-4 rounded-xl md:border-2 md:border-stone-200 md:shadow-xl">
               <div className="text-stone-600">
                   已选: <span className="font-bold text-stone-900">{selectedTraits.length}/3</span>
+                  <span className="text-xs ml-2 text-stone-400 hidden md:inline">(需包含专业、育人、职场各一项)</span>
               </div>
               <Button onClick={confirmTraits} disabled={selectedTraits.length !== 3}>
                   确认入职
@@ -744,6 +765,7 @@ export default function App() {
   const renderGameOver = () => {
     // Determine if it is a success (Retirement) or failure
     const isSuccess = gameState.gameOverReason?.includes('光荣退休');
+    const finalTitle = TITLES.find(t => t.id === gameState.title)?.name || '讲师';
 
     return (
       <div className={`min-h-screen p-4 flex items-center justify-center ${isSuccess ? 'bg-amber-50' : 'bg-red-900'}`}>
@@ -759,6 +781,12 @@ export default function App() {
                       </div>
                   )}
                   
+                  <div className="mb-2">
+                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold border ${isSuccess ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-red-800 text-red-100 border-red-600'}`}>
+                           最终职称：{finalTitle}
+                       </span>
+                  </div>
+
                   <h1 className="text-3xl md:text-5xl font-bold mb-2 font-serif">
                       {isSuccess ? '功成身退' : '生涯终结'}
                   </h1>
@@ -804,7 +832,13 @@ export default function App() {
     );
   };
 
-  const renderDashboard = () => (
+  const renderDashboard = () => {
+    // Check for affordable upgrades
+    const hasAffordableUpgrade = UPGRADES.some(u => 
+        !gameState.upgrades.includes(u.id) && gameState.stats.resources >= u.cost
+    );
+
+    return (
     <div className="min-h-screen bg-stone-100 p-4 pb-24 md:p-8 overflow-x-hidden relative">
       
       {/* Floating Texts Container */}
@@ -891,8 +925,11 @@ export default function App() {
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
                  <div className="flex gap-2 w-full sm:w-auto">
-                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none">
+                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none relative">
                          <ShoppingCart size={18} /> 建设
+                         {hasAffordableUpgrade && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white"></span>
+                         )}
                      </Button>
                      <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="flex-1 sm:flex-none">
                         {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
@@ -968,6 +1005,7 @@ export default function App() {
       {gameState.phase === 'SUMMARY' && renderSummary()}
     </div>
   );
+  };
 
   return (
     <>

@@ -231,14 +231,16 @@ export default function App() {
     const { stats, traits, studentCount, flags, year } = gameState;
     const traitIds = traits.map(t => t.id);
 
-    // 1. Check for Chain Events (High Priority)
-    const chainTrigger = CHAIN_EVENTS.find(e => 
+    // 1. Check for Chain Events (High Priority but Random)
+    // Filter ALL possible chain events that meet conditions
+    const possibleChains = CHAIN_EVENTS.filter(e => 
       e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
     
-    // Higher chance for chain events if conditions are met
-    if (chainTrigger && Math.random() < 0.7) { 
-      setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: chainTrigger }));
+    // Pick one randomly if available, with 30% chance to trigger any chain if available
+    if (possibleChains.length > 0 && Math.random() < 0.3) { 
+      const selectedChain = possibleChains[Math.floor(Math.random() * possibleChains.length)];
+      setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: selectedChain }));
       return;
     }
 
@@ -254,10 +256,6 @@ export default function App() {
     }
 
     // 3. Pick Random Event from Pool
-    // Filter out risk events that have already been triggered by looking at flags
-    // This assumes constants.ts RISK events have logic to check flags, OR we can filter here.
-    // The safest way is to trust the random pick but add a safeguard for Risk events.
-    
     let validPool = EVENT_POOL;
     let event = null;
     let attempts = 0;
@@ -269,11 +267,11 @@ export default function App() {
         // If it's a risk event, perform extra check to see if we should skip it (reduce frequency)
         if (candidate.category === 'risk') {
             // 20% chance to actually trigger a risk event if selected, making them rarer
-            if (Math.random() < 0.2) { 
-                // Also check if condition allows (constants.ts handles one-time flag check)
-                if (!candidate.condition || candidate.condition(stats, traitIds, studentCount, flags, year)) {
-                    event = candidate;
-                }
+            // And ensure it hasn't been handled yet (redundant with condition but safe)
+            const isHandled = candidate.condition && !candidate.condition(stats, traitIds, studentCount, flags, year);
+            
+            if (!isHandled && Math.random() < 0.2) { 
+                event = candidate;
             }
         } else {
             // Normal event
@@ -286,10 +284,16 @@ export default function App() {
     
     // Fallback if loop failed
     if (!event) {
-        event = EVENT_POOL[Math.floor(Math.random() * EVENT_POOL.length)];
+        // Try finding any valid event
+        const fallbackCandidates = EVENT_POOL.filter(e => !e.condition || e.condition(stats, traitIds, studentCount, flags, year));
+        if (fallbackCandidates.length > 0) {
+            event = fallbackCandidates[Math.floor(Math.random() * fallbackCandidates.length)];
+        }
     }
 
-    setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
+    if (event) {
+        setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: event }));
+    }
   }, [gameState.stats, gameState.traits, gameState.studentCount, gameState.flags, gameState.year]); 
 
   const processStudentLifecycle = (currentStats: Stats, currentStudents: Student[], currentYear: number) => {

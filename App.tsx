@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
@@ -357,13 +358,13 @@ export default function App() {
 
     // --- Start of New Year Logic ---
 
-    // 0. Entropy / Decay (High Difficulty Mechanism)
+    // 0. Entropy / Decay (High Difficulty Mechanism) - Relaxed Thresholds
     // 逆水行舟，不进则退：高属性维护成本极高
     const decayChanges: Partial<Stats> = {};
     const applyDecay = (val: number) => {
-        if (val > 18 && Math.random() < 0.5) return -1; // 50% decay at very high levels
-        if (val > 14 && Math.random() < 0.3) return -1; // 30% decay at high levels
-        if (val > 10 && Math.random() < 0.1) return -1; // 10% decay at medium levels
+        if (val > 19 && Math.random() < 0.5) return -1; // Raised from 18
+        if (val > 16 && Math.random() < 0.3) return -1; // Raised from 14
+        if (val > 12 && Math.random() < 0.1) return -1; // Raised from 10
         return 0;
     };
 
@@ -371,7 +372,7 @@ export default function App() {
     const dReputation = applyDecay(gameState.stats.reputation);
     const dSatisfaction = applyDecay(gameState.stats.satisfaction);
     // Resources naturally drain more if you have a lot (people asking for money, maintenance)
-    const dResources = gameState.stats.resources > 12 && Math.random() < 0.3 ? -1 : 0;
+    const dResources = gameState.stats.resources > 14 && Math.random() < 0.3 ? -1 : 0; // Raised from 12
 
     if (dAcademic || dReputation || dSatisfaction || dResources) {
          decayChanges.academic = dAcademic;
@@ -1188,11 +1189,11 @@ export default function App() {
         {/* Right Column (Career) - Hidden on mobile unless 'career' tab is active */}
         <div className={`md:col-span-8 flex flex-col gap-6 ${mobileTab === 'career' ? 'block' : 'hidden md:flex'}`}>
             {/* Action Bar */}
-            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center shadow-sm gap-4 sticky top-[72px] md:top-0 z-20">
-                 <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block">
+            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col md:grid md:grid-cols-[1fr_auto] gap-4 shadow-sm sticky top-[72px] md:top-0 z-20">
+                 <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block self-center">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
+                 <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
                      <Button onClick={() => setShowProjects(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
                          <FileText size={18} className="hidden md:inline" /> 申报
                          {hasAvailableProject && (

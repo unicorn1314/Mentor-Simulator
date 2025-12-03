@@ -221,7 +221,7 @@ export const PHASE_EVALUATIONS = [
   { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，站好最后一班岗。' }
 ];
 
-// --- KPIs (New Up-or-Out System) ---
+// --- KPIs (New Up-or-Out System) - Difficulty Reduced ---
 export const KPIS: KPI[] = [
     {
         year: 5,
@@ -237,36 +237,36 @@ export const KPIS: KPI[] = [
     },
     {
         year: 15,
-        description: '正高晋升压力：口碑声望 >= 14',
-        condition: (s) => s.reputation >= 14,
+        description: '正高晋升压力：口碑声望 >= 12', // Lowered from 14
+        condition: (s) => s.reputation >= 12,
         failMessage: '【解聘】长期未能晋升正高，被学校边缘化并劝退。'
     },
     {
         year: 20,
-        description: '学科带头人考核：学术 >= 16 且 资源 >= 12',
-        condition: (s) => s.academic >= 16 && s.resources >= 12,
+        description: '学科带头人考核：学术 >= 15 且 资源 >= 10', // Lowered from 16/12
+        condition: (s) => s.academic >= 15 && s.resources >= 10,
         failMessage: '【被免职】未能承担起学科建设重任，被迫提前退休。'
     },
     {
         year: 25,
-        description: '终身成就考核：任意一项属性满 20',
-        condition: (s) => s.academic >= 20 || s.reputation >= 20 || s.satisfaction >= 20 || s.resources >= 20,
+        description: '终身成就考核：任意一项属性 >= 18', // Lowered from 20
+        condition: (s) => s.academic >= 18 || s.reputation >= 18 || s.satisfaction >= 18 || s.resources >= 18,
         failMessage: '【晚节不保】临近退休未能守住晚节，被学校劝退。'
     }
 ];
 
-// --- Research Projects (New Active Strategy) ---
+// --- Research Projects (New Active Strategy) - Buffed ---
 export const PROJECTS: ProjectDefinition[] = [
     {
         id: 'proj_youth',
         name: '青年科学基金',
         type: 'national',
-        duration: 3,
-        reqStats: { academic: 6, reputation: 4 },
-        costPerYear: { academic: -1 }, // Distracted
-        reward: { academic: 3, resources: 3, reputation: 1 },
+        duration: 2, // Reduced from 3
+        reqStats: { academic: 5, reputation: 4 }, // Lowered req from 6
+        costPerYear: { academic: -1 }, 
+        reward: { academic: 3, resources: 3, reputation: 2 }, // Increased rewards
         penalty: { reputation: -1 },
-        description: '年轻人的第一桶金。需要投入精力，导致短期学术增长变慢。'
+        description: '年轻人的第一桶金。周期短，见效快。'
     },
     {
         id: 'proj_corp',
@@ -274,19 +274,19 @@ export const PROJECTS: ProjectDefinition[] = [
         type: 'corporate',
         duration: 2,
         reqStats: { resources: 4, reputation: 6 },
-        costPerYear: { satisfaction: -1 }, // Students hate it
+        costPerYear: { academic: -1 }, // Changed from satisfaction -1 (too harsh)
         reward: { resources: 5, reputation: 1 },
         penalty: { reputation: -2, resources: -2 },
-        description: '企业的加急项目。能赚大钱，但学生会被当成廉价劳动力。'
+        description: '企业的加急项目。能赚大钱，稍微分散学术精力。'
     },
     {
         id: 'proj_face',
         name: '国家面上项目',
         type: 'national',
-        duration: 4,
+        duration: 3, // Reduced from 4
         reqStats: { academic: 12, reputation: 8 },
-        costPerYear: { academic: -1, satisfaction: -1 },
-        reward: { academic: 5, resources: 5, reputation: 3 },
+        costPerYear: { academic: -1 }, // Removed satisfaction cost
+        reward: { academic: 5, resources: 5, reputation: 3 }, // Good reward
         penalty: { reputation: -3, academic: -1 },
         description: '学术界的中流砥柱。难度适中，回报丰厚。'
     },
@@ -294,12 +294,12 @@ export const PROJECTS: ProjectDefinition[] = [
         id: 'proj_key',
         name: '重点研发计划',
         type: 'national',
-        duration: 5,
+        duration: 4, // Reduced from 5
         reqStats: { academic: 16, resources: 10 },
         costPerYear: { academic: -2, resources: -1 },
-        reward: { academic: 8, resources: 8, reputation: 5 },
+        reward: { academic: 10, resources: 10, reputation: 5 }, // Massive reward
         penalty: { reputation: -5, academic: -3, resources: -3 },
-        description: '国家级大项目。极度消耗精力与资源，一旦烂尾将身败名裂。'
+        description: '国家级大项目。极度消耗精力与资源，但回报是巨大的。'
     },
     {
         id: 'proj_talent',

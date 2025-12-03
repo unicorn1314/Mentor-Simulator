@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer, ShieldCheck } from 'lucide-react';
 import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
@@ -234,11 +233,12 @@ export default function App() {
     }
 
     // 2. Check for Hidden Events
+    // Lowered probability from 0.3 to 0.05 (5%) to make them truly rare/special
     const hiddenTrigger = HIDDEN_EVENTS.find(e => 
       e.condition && e.condition(stats, traitIds, studentCount, flags, year)
     );
 
-    if (hiddenTrigger && Math.random() < 0.3) {
+    if (hiddenTrigger && Math.random() < 0.05) {
       setGameState(prev => ({ ...prev, phase: 'EVENT', currentEvent: hiddenTrigger }));
       return;
     }

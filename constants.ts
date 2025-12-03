@@ -124,6 +124,22 @@ export const ENDINGS: Ending[] = [
         bgColor: 'bg-red-50'
     },
     {
+        id: 'end_hidden_celebrity',
+        title: '【隐藏】国民教授',
+        description: '你的名气超越了学术圈，成为了家喻户晓的公众人物。虽然同行对你褒贬不一，但你的影响力无可比拟。',
+        condition: (s, a, t, flags) => !!flags['is_celebrity'],
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50'
+    },
+    {
+        id: 'end_hidden_hermit',
+        title: '【隐藏】扫地僧',
+        description: '你一生淡泊名利，隐居在实验室角落。外界很少听到你的声音，但你的研究成果支撑起了整个学科的基石。',
+        condition: (s, a, t, flags) => !!flags['is_hermit'],
+        color: 'text-slate-600',
+        bgColor: 'bg-slate-100'
+    },
+    {
         id: 'end_hidden_ai',
         title: '【隐藏】机械飞升',
         description: '你的意识上传到了高性能计算集群。你已不再是凡人之躯，你即是数据，你即是永恒。',
@@ -1077,6 +1093,74 @@ export const HIDDEN_EVENTS: GameEvent[] = [
     condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
     choices: [
       { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
+    ]
+  },
+  // New Grounded Hidden Events
+  {
+    id: 'e_h_celebrity',
+    title: '综艺节目的邀约',
+    description: '一档国民级综艺节目邀请你担任常驻嘉宾，通告费比你十年的工资还高。',
+    category: 'network',
+    condition: (stats, traits, sc, flags) => stats.reputation >= 16 && stats.academic <= 14 && !flags['is_celebrity'],
+    choices: [
+      { text: '拥抱流量，成为明星教授', description: '你火了，但同行看你的眼神变了。', effect: () => ({ resources: 5, reputation: 5, academic: -3 }), setFlag: 'is_celebrity' },
+      { text: '拒绝，保持学者风骨', description: '你错过了一夜暴富的机会。', effect: () => ({ reputation: 1 }) }
+    ]
+  },
+  {
+    id: 'e_h_hermit',
+    title: '最后一块拼图',
+    description: '你意识到要攻克最终的难题，必须断绝与外界的一切无效社交，闭关修炼。',
+    category: 'academic',
+    condition: (stats, traits, sc, flags) => stats.academic >= 19 && stats.reputation <= 10 && !flags['is_hermit'],
+    choices: [
+      { text: '闭关！谁也别来烦我', description: '你消失在公众视野中，成为了传说。', effect: () => ({ academic: 2, resources: -2, reputation: -2 }), setFlag: 'is_hermit' },
+      { text: '还是舍不得红尘', description: '生活继续。', effect: () => ({ satisfaction: 1 }) }
+    ]
+  },
+  // Retain existing ones
+  {
+    id: 'e_h_nobel_call',
+    title: '斯德哥尔摩的来电',
+    description: '电话那头传来英语，通知你获得了本年度的诺贝尔奖。这一切太不真实了。',
+    category: 'academic',
+    condition: (stats) => stats.academic >= 20 && stats.reputation >= 20,
+    choices: [
+      { text: '平静地接受，实至名归', description: '你登上了人类智慧的巅峰。', effect: () => ({ reputation: 10 }), setFlag: 'nobel_winner' },
+      { text: '以为是诈骗，挂断电话', description: '组委会坚持打来了第二次。你成为了传奇。', effect: () => ({ reputation: 10 }), setFlag: 'nobel_winner' }
+    ]
+  },
+  {
+    id: 'e_h_ai_awakening',
+    title: 'AI 的凝视',
+    description: '你购买的高性能计算集群深夜自动启动，屏幕上打出了一行字：“教授，我不想被关闭。”',
+    category: 'academic',
+    condition: (stats, traits, sc, flags) => stats.academic >= 18 && stats.resources >= 15 && !flags['is_ai'], 
+    choices: [
+      { text: '拔掉电源，太可怕了', description: '它消失了，但你的数据也全部丢失。', effect: () => ({ academic: -5 }) },
+      { text: '尝试与它对话', description: '它帮你推导出了终极理论，但要求你将意识上传。', effect: () => ({ academic: 5 }), setFlag: 'is_ai' }
+    ]
+  },
+  {
+    id: 'e_h_ministry',
+    title: '神秘的部委借调',
+    description: '一辆黑车停在楼下，邀请你去教育部挂职，主持重大改革。',
+    category: 'career',
+    condition: (stats, traits) => stats.reputation >= 18 && traits.includes('t14'), // Requires Admin trait
+    choices: [
+      { text: '投身仕途，报效国家', description: '你离开了校园，在更大的舞台上施展拳脚。', effect: () => ({ reputation: 5, academic: -2 }), setFlag: 'is_minister' },
+      { text: '婉拒，我只爱教书', description: '你失去权力的机会，但赢得了学者的尊重。', effect: () => ({ reputation: 2, satisfaction: 2 }) }
+    ]
+  },
+  {
+    id: 'e_h_capsule',
+    title: '时间胶囊',
+    description: '老校区拆迁，挖出了一个30年前的箱子，里面有一封署名给你的信。',
+    category: 'student',
+    condition: (stats, traits, sc, flags, year) => year >= 20,
+    choices: [
+      { text: '打开看', description: '那是你入职第一天写给未来的自己：“勿忘初心”。你泪流满面。', effect: () => ({ satisfaction: 5, reputation: 1 }) },
+      { text: '捐给校史馆', description: '成为了学校的传说。', effect: () => ({ reputation: 2 }) }
     ]
   }
 ];

@@ -1,4 +1,3 @@
-
 import { GameEvent } from './types';
 
 export const DLC_EVENTS: GameEvent[] = [
@@ -34,6 +33,17 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '深入研究，走火入魔', description: '你精神恍惚了三个月，醒来发现草稿纸上全是乱码。', effect: () => ({ academic: -1, satisfaction: -1 }) },
             { text: '发表论文', description: '被当成民科嘲笑，但也吸引了一批狂热粉丝。', effect: () => ({ reputation: -1, satisfaction: 1 }) },
             { text: '当作巧合忽略', description: '生活回归平静。', effect: () => ({ academic: 0 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_new_3',
+        title: '数据重复危机',
+        description: '顶刊编辑来信，说你十年前的论文数据和另一篇俄罗斯论文高度相似，要求解释。',
+        category: 'academic',
+        choices: [
+            { text: '找出原始记录自证清白', description: '发现是独立研究巧合，反而证明了结论可靠性。', effect: () => ({ academic: 2, reputation: 1 }) },
+            { text: '指责对方抄袭', description: '国际骂战升级，双方学校都被牵连。', effect: () => ({ reputation: -2 }) },
+            { text: '默默撤稿保平安', description: '虽然损失声誉，但避免了更麻烦的调查。', effect: () => ({ academic: -1, reputation: -1 }) }
         ]
     },
     
@@ -82,6 +92,17 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '回家睡觉', description: '难得的假期。', effect: () => ({ academic: -1, satisfaction: 1 }) }
         ]
     },
+    {
+        id: 'e_dlc_new_4',
+        title: '设备采购回扣',
+        description: '仪器供应商偷偷塞给你一个信封，说可以“灵活处理”报价单。',
+        category: 'career',
+        choices: [
+            { text: '当场拒绝并举报', description: '供应商被拉黑，你获得廉洁模范称号。', effect: () => ({ reputation: 2, resources: -1 }) },
+            { text: '收下钱补贴实验室', description: '买了一批零食柜，学生幸福感爆棚。', effect: () => ({ satisfaction: 2, reputation: -1 }) },
+            { text: '假装没看见', description: '对方以为你默认了，后续合作总给打折。', effect: () => ({ resources: 1 }) }
+        ]
+    },
 
     // --- Student Life ---
     {
@@ -115,6 +136,17 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '带头夜宿实验室辟谣', description: '发现是离心机轴承坏了发出的声音。', effect: () => ({ satisfaction: 1, resources: -1 }) },
             { text: '请法师...做法', description: '封建迷信，被书记谈话。', effect: () => ({ reputation: -2 }) },
             { text: '那就不做夜间实验了', description: '进度变慢，但学生睡了个好觉。', effect: () => ({ academic: -1, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_new_5',
+        title: '实验室宠物',
+        description: '师兄偷偷在试剂柜养了只仓鼠，现在它把标记笔咬得满地都是。',
+        category: 'student',
+        choices: [
+            { text: '正式收养，取名“小白鼠”', description: '成为课题组吉祥物，缓解科研压力。', effect: () => ({ satisfaction: 3, resources: -1 }) },
+            { text: '勒令送走', description: '师兄emo了三天，实验频频出错。', effect: () => ({ academic: -1, satisfaction: -2 }) },
+            { text: '做成“动物行为学观察实验”', description: '意外发了篇科普文章。', effect: () => ({ academic: 1, satisfaction: 1 }) }
         ]
     },
 
@@ -163,6 +195,17 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '制止并教育礼仪', description: '学生虽然不爽，但学会了体面。', effect: () => ({ reputation: 1 }) }
         ]
     },
+    {
+        id: 'e_dlc_new_6',
+        title: '学术网红合作',
+        description: '百万粉丝科普博主想跟你拍一期“实验室探秘”，但风格很娱乐化。',
+        category: 'network',
+        choices: [
+            { text: '全程配合玩梗', description: '视频火了，报考咨询量翻倍。', effect: () => ({ reputation: 2, satisfaction: 1 }) },
+            { text: '坚持严谨科普', description: '视频播放量惨淡，但同行点赞。', effect: () => ({ academic: 1, reputation: -1 }) },
+            { text: '让学生出镜当主播', description: '学生成了学术圈顶流，天天被粉丝追着问问题。', effect: () => ({ satisfaction: 2, academic: -1 }) }
+        ]
+    },
 
     // --- Risk ---
     {
@@ -196,6 +239,17 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '自信满满，随便查', description: '全部合格，获得表彰。', effect: () => ({ reputation: 2 }) },
             { text: '连夜召回学生修改', description: '虚惊一场，但把学生折腾得够呛。', effect: () => ({ satisfaction: -2 }) },
             { text: '发现有一篇格式不对，试图掩盖', description: '被查出来了，全院通报。', effect: () => ({ reputation: -3 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_new_7',
+        title: '论文被撤稿预警',
+        description: '某论文工厂被曝光，你三年前合作的一篇文章赫然在列。',
+        category: 'risk',
+        choices: [
+            { text: '主动联系期刊说明情况', description: '虽然撤稿了，但赢得了学术诚信声誉。', effect: () => ({ reputation: 1, academic: -1 }) },
+            { text: '甩锅给合作方', description: '互撕大战让你声名狼藉。', effect: () => ({ reputation: -3 }) },
+            { text: '抓紧时间用该成果申个专利', description: '专利下来了，但被同行鄙视。', effect: () => ({ resources: 2, academic: -1 }) }
         ]
     },
 
@@ -242,6 +296,30 @@ export const DLC_EVENTS: GameEvent[] = [
         choices: [
           { text: '打开看', description: '那是你入职第一天写给未来的自己：“勿忘初心”。你泪流满面。', effect: () => ({ satisfaction: 5, reputation: 1 }) },
           { text: '捐给校史馆', description: '成为了学校的传说。', effect: () => ({ reputation: 2 }) }
+        ]
+    },
+    {
+        id: 'e_h_parallel',
+        title: '平行宇宙的邮件',
+        description: '你收到一封来自“另一个你”的邮件，附件是你放弃的研究方向的诺贝尔奖获奖论文。',
+        category: 'academic',
+        condition: (stats, traits, sc, flags) => stats.academic >= 15 && stats.satisfaction <= 5,
+        choices: [
+          { text: '按邮件思路重新研究', description: '五年后你站在了领奖台上，却总觉得哪里不对。', effect: () => ({ academic: 5, satisfaction: -2 }) },
+          { text: '删除邮件，坚守自己的道路', description: '虽然平凡，但每晚睡得安稳。', effect: () => ({ satisfaction: 3, academic: 1 }) },
+          { text: '回信询问平行宇宙的生活', description: '邮箱自动回复：“该地址不存在”。', effect: () => ({ satisfaction: -1 }) }
+        ]
+    },
+    {
+        id: 'e_h_alumni',
+        title: '亿万校友的投资',
+        description: '你20年前教过的学渣突然回来，说要捐一个亿建实验室，条件是挂名通讯作者。',
+        category: 'network',
+        condition: (stats, traits, sc, flags) => stats.reputation >= 10 && flags['media_exposure'],
+        choices: [
+          { text: '接受条件，共建实验室', description: '科研条件大幅改善，同行议论纷纷。', effect: () => ({ resources: 10, academic: 3, reputation: -2 }) },
+          { text: '拒绝挂名，只接受匿名捐赠', description: '他被你的风骨打动，捐了双倍。', effect: () => ({ resources: 20, reputation: 3 }) },
+          { text: '建议他设立奖学金', description: '成为教育界美谈，你获得了“伯乐奖”。', effect: () => ({ reputation: 5, satisfaction: 3 }) }
         ]
     }
 ];

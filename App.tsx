@@ -208,6 +208,17 @@ export default function App() {
     newStats.satisfaction = Math.max(1, newStats.satisfaction);
     newStats.resources = Math.max(1, newStats.resources);
 
+    // Calculate changes for visual feedback
+    const changes: Partial<Stats> = {
+        academic: newStats.academic - INITIAL_STATS.academic,
+        reputation: newStats.reputation - INITIAL_STATS.reputation,
+        satisfaction: newStats.satisfaction - INITIAL_STATS.satisfaction,
+        resources: newStats.resources - INITIAL_STATS.resources
+    };
+
+    // Trigger visual feedback
+    spawnFloatingText(changes);
+
     setGameState(prev => ({
       ...prev,
       stats: newStats,

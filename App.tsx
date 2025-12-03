@@ -46,6 +46,14 @@ const Button: React.FC<{ onClick: () => void; children: React.ReactNode; variant
   );
 };
 
+// --- Localization Map ---
+const STAT_LABELS: Record<string, string> = {
+  academic: '学术',
+  reputation: '口碑',
+  satisfaction: '学生',
+  resources: '资源'
+};
+
 // --- Main App ---
 
 export default function App() {
@@ -180,6 +188,13 @@ export default function App() {
     finalTraits.forEach(t => {
       if (t.effect) newStats = t.effect(newStats);
     });
+
+    // Final safety check to ensure game doesn't start with Game Over stats
+    // Even if traits reduce stats, clamp them to minimum 1 at start
+    newStats.academic = Math.max(1, newStats.academic);
+    newStats.reputation = Math.max(1, newStats.reputation);
+    newStats.satisfaction = Math.max(1, newStats.satisfaction);
+    newStats.resources = Math.max(1, newStats.resources);
 
     setGameState(prev => ({
       ...prev,
@@ -876,11 +891,11 @@ export default function App() {
                                             </div>
                                              <div>
                                                 <span className="font-bold text-red-500 block">每年的消耗/代价</span>
-                                                {Object.entries(proj.costPerYear).map(([k,v]) => <div key={k}>{k} {v}</div>)}
+                                                {Object.entries(proj.costPerYear).map(([k,v]) => <div key={k}>{STAT_LABELS[k] || k} {v}</div>)}
                                             </div>
                                             <div>
                                                 <span className="font-bold text-green-600 block">结题回报</span>
-                                                {Object.entries(proj.reward).map(([k,v]) => <div key={k}>{k} +{v}</div>)}
+                                                {Object.entries(proj.reward).map(([k,v]) => <div key={k}>{STAT_LABELS[k] || k} +{v}</div>)}
                                             </div>
                                         </div>
                                     </div>
@@ -1153,21 +1168,21 @@ export default function App() {
         {/* Right Column (Career) - Hidden on mobile unless 'career' tab is active */}
         <div className={`md:col-span-8 flex flex-col gap-6 ${mobileTab === 'career' ? 'block' : 'hidden md:flex'}`}>
             {/* Action Bar */}
-            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm gap-4 sticky top-[72px] md:top-0 z-20">
+            <div className="bg-white border-2 border-stone-200 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center shadow-sm gap-4 sticky top-[72px] md:top-0 z-20">
                  <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
-                     <Button onClick={() => setShowProjects(true)} variant="secondary" className="flex-1 sm:flex-none relative whitespace-nowrap">
-                         <FileText size={18} /> 申报项目
+                 <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
+                     <Button onClick={() => setShowProjects(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
+                         <FileText size={18} className="hidden md:inline" /> 申报
                      </Button>
-                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none relative whitespace-nowrap">
-                         <ShoppingCart size={18} /> 建设
+                     <Button onClick={() => setShowShop(true)} variant="secondary" className="px-2 py-3 text-sm md:text-base md:px-6 relative whitespace-nowrap">
+                         <ShoppingCart size={18} className="hidden md:inline" /> 建设
                          {hasAffordableUpgrade && (
                             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white"></span>
                          )}
                      </Button>
-                     <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="flex-1 sm:flex-none whitespace-nowrap">
+                     <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="px-2 py-3 text-sm md:text-base md:px-6 whitespace-nowrap">
                         {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
                      </Button>
                  </div>

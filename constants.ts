@@ -1,8 +1,7 @@
-
-import { GameEvent, Trait, Achievement, GameState, Upgrade, Title, Ending, KPI, ProjectDefinition } from './types';
+import { GameEvent, Trait, Achievement, Upgrade, Title, Ending, KPI, ProjectDefinition, GameState, Stats } from './types';
 import { DLC_EVENTS } from './dlc_events';
 
-// --- Traits (Nerfed some bonuses to +2 from +3) ---
+// --- Traits (符合 Stats 类型) ---
 export const TRAITS: Trait[] = [
   // Professional
   { id: 't1', name: '学术大牛', category: 'professional', description: '发表论文如喝水，由于太专注于学术，可能忽略人际。', effect: (s) => ({ ...s, academic: s.academic + 2, reputation: s.reputation + 1, satisfaction: s.satisfaction - 1 }) },
@@ -62,10 +61,19 @@ export const UPGRADES: Upgrade[] = [
         description: '劳逸结合。每年满意度 +2。',
         cost: 10,
         passive: () => ({ satisfaction: 2 })
+    },
+    // [Important] Game Engine must set flag 'has_insurance' = true when this is bought
+    {
+        id: 'u_insurance',
+        name: '高端医疗保险',
+        description: '年纪大了，命最重要。防止因过劳导致的直接游戏结束。',
+        cost: 20,
+        passive: () => ({}) 
     }
 ];
 
 // --- Titles (Promotion) ---
+// Note: Title condition receives GameState, so accessing stats/achievements is safe.
 export const TITLES: Title[] = [
     {
         id: 'title_lecturer',
@@ -104,9 +112,10 @@ export const TITLES: Title[] = [
     }
 ];
 
-// --- Rich Endings ---
+// --- Endings ---
+// Note: Ending condition receives (stats, achievements, title, flags), so accessing these is safe.
 export const ENDINGS: Ending[] = [
-    // Hidden Endings from DLC are handled via conditions, listed here for consistency
+    // Hidden Endings
     {
         id: 'end_hidden_nobel',
         title: '【传说】诺贝尔奖得主',
@@ -131,12 +140,41 @@ export const ENDINGS: Ending[] = [
         color: 'text-cyan-500',
         bgColor: 'bg-slate-900'
     },
+    
+    // Tragic/Bad Endings
+    {
+        id: 'end_tragic_overwork',
+        title: '【悲剧】倒在黎明前',
+        description: '长期的过度劳累压垮了你的身体。你的论文发表了，但你再也看不到了。',
+        condition: (s, a, t, flags) => !!flags['died_of_overwork'],
+        color: 'text-gray-500',
+        bgColor: 'bg-black'
+    },
+    {
+        id: 'end_tragic_scandal',
+        title: '【恶名】学术败类',
+        description: '你因严重的学术不端或丑闻被永久除名。你的名字成了反面教材。',
+        condition: (s, a, t) => s.reputation <= 0,
+        color: 'text-red-900',
+        bgColor: 'bg-red-100'
+    },
+
+    // Absurd Endings
+    {
+        id: 'end_absurd_influencer',
+        title: '【荒诞】带货大V',
+        description: '虽然学术搞得一团糟，但你在抖音上吐槽科研火了。现在你卖试剂盒赚的比诺奖奖金还多。',
+        condition: (s, a, t) => s.reputation >= 20 && s.academic <= 10,
+        color: 'text-fuchsia-600',
+        bgColor: 'bg-fuchsia-50'
+    },
+
     // Standard Endings
     {
         id: 'end_legend_academic',
         title: '【传说】学术泰斗',
         description: '你的名字被写进了教科书，成为后世仰望的灯塔。你在学术界的地位无人能撼动，是真正的国士无双。',
-        condition: (s, a, t) => s.academic >= 19 && t === 'title_academician',
+        condition: (s, a, t) => s.academic >= 22 && t === 'title_academician',
         color: 'text-amber-600',
         bgColor: 'bg-amber-50'
     },
@@ -144,7 +182,7 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_educator',
         title: '【传说】万世师表',
         description: '你的学生遍布全球名校和科研机构，桃李满天下。你不仅深受爱戴，更在教育界享有崇高的声望。',
-        condition: (s, a, t) => s.satisfaction >= 19 && s.reputation >= 12 && s.academic >= 10 && a.includes('ach_1'),
+        condition: (s, a, t) => s.satisfaction >= 20 && s.reputation >= 15 && s.academic >= 12 && a.includes('ach_1'),
         color: 'text-pink-600',
         bgColor: 'bg-pink-50'
     },
@@ -152,7 +190,7 @@ export const ENDINGS: Ending[] = [
         id: 'end_legend_tycoon',
         title: '【传说】产学研大亨',
         description: '你不仅学术有成，更建立了庞大的商业帝国。你的技术转化成果改变了行业，你也实现了财务自由。',
-        condition: (s, a, t) => s.resources >= 19 && s.reputation >= 10,
+        condition: (s, a, t) => s.resources >= 22 && s.reputation >= 10,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50'
     },
@@ -199,6 +237,7 @@ export const ENDINGS: Ending[] = [
 ];
 
 // --- Achievements ---
+// Note: Condition receives GameState.
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'ach_1',
@@ -231,6 +270,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     condition: (state: GameState) => state.stats.reputation >= 10 && state.history.some(h => h.message.includes('声誉受损')),
     reward: { satisfaction: 2 },
     unlocked: false
+  },
+  {
+    id: 'ach_5',
+    title: '六边形战士',
+    description: '所有属性均超过 15。',
+    condition: (state: GameState) => state.stats.academic >= 15 && state.stats.reputation >= 15 && state.stats.resources >= 15 && state.stats.satisfaction >= 15,
+    reward: { academic: 2, reputation: 2 },
+    unlocked: false
   }
 ];
 
@@ -240,11 +287,12 @@ export const PHASE_EVALUATIONS = [
   { minYear: 6, maxYear: 10, title: '骨干成长期', desc: '逐渐站稳脚跟，开始建立自己的小团队。' },
   { minYear: 11, maxYear: 15, title: '学术爆发期', desc: '精力最旺盛的阶段，成果井喷。' },
   { minYear: 16, maxYear: 20, title: '瓶颈转型期', desc: '面临中年危机，思考是继续学术还是转向行政。' },
-  { minYear: 21, maxYear: 25, title: '权威确立期', desc: '江湖地位已成，更多是提携后辈。' },
-  { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，站好最后一班岗。' }
+  { minYear: 21, maxYear: 25, title: '权威确立期', desc: '江湖地位已成，但需要提防“晚节不保”。' },
+  { minYear: 26, maxYear: 30, title: '退休倒计时', desc: '看淡名利，但体检报告上的红字越来越多。' }
 ];
 
 // --- KPIs ---
+// Note: Condition receives Stats.
 export const KPIS: KPI[] = [
     {
         year: 5,
@@ -266,15 +314,28 @@ export const KPIS: KPI[] = [
     },
     {
         year: 20,
-        description: '学科带头人考核：学术 >= 16 且 资源 >= 12',
-        condition: (s) => s.academic >= 16 && s.resources >= 12,
-        failMessage: '【被免职】未能承担起学科建设重任，被迫提前退休。'
+        description: '【困难】学科带头人考核：学术 >= 18 且 资源 >= 12',
+        condition: (s) => s.academic >= 18 && s.resources >= 12,
+        failMessage: '【被免职】未能承担起学科建设重任，被剥夺实验室主导权，被迫提前退休。'
     },
     {
         year: 25,
-        description: '终身成就考核：任意一项属性满 20',
-        condition: (s) => s.academic >= 20 || s.reputation >= 20 || s.satisfaction >= 20 || s.resources >= 20,
-        failMessage: '【晚节不保】临近退休未能守住晚节，被学校劝退。'
+        description: '【噩梦】终身成就考核：任意两项属性 >= 18',
+        condition: (s) => {
+            let count = 0;
+            if (s.academic >= 18) count++;
+            if (s.reputation >= 18) count++;
+            if (s.satisfaction >= 18) count++;
+            if (s.resources >= 18) count++;
+            return count >= 2;
+        },
+        failMessage: '【晚节不保】临近退休未能守住晚节，被学校劝退，只有微薄的退休金。'
+    },
+    {
+        year: 30,
+        description: '最终清算：未曾触发过“重大丑闻”且声望 >= 10',
+        condition: (s) => s.reputation >= 10,
+        failMessage: '【凄惨离场】虽然熬到了退休，但因声名狼藉，没有学生愿意来送别。'
     }
 ];
 
@@ -334,10 +395,22 @@ export const PROJECTS: ProjectDefinition[] = [
         reward: { satisfaction: 5, reputation: 4, academic: 2 },
         penalty: { satisfaction: -4, reputation: -2 },
         description: '专注于培养一批高质量博士。非常烧钱，但能极大提升声望。'
+    },
+    {
+        id: 'proj_gamble',
+        name: '【赌局】颠覆性技术攻关',
+        type: 'national',
+        duration: 4,
+        reqStats: { academic: 20, resources: 15 },
+        costPerYear: { resources: -3, academic: -1 },
+        reward: { academic: 10, reputation: 10, resources: 10 },
+        penalty: { academic: -8, reputation: -8, resources: -8 },
+        description: '要么名垂青史，要么身败名裂。只有最疯狂的科学家才敢接。'
     }
 ];
 
 // --- Basic Events ---
+// Note: GameEvent condition signature is (stats, traits, studentCount, flags, year)
 const ACADEMIC_EVENTS: GameEvent[] = [
   {
     id: 'e_a1',
@@ -491,6 +564,17 @@ const ACADEMIC_EVENTS: GameEvent[] = [
       { text: '牺牲手纸，写在上面', description: '虽然有点味道，但问题解决了！', effect: () => ({ academic: 3, satisfaction: 1 }) },
       { text: '默念一百遍冲回办公室', description: '跑到半路忘了一半。', effect: () => ({ academic: 1 }) },
       { text: '发语音给自己', description: '被隔间的人听到了，以为你疯了。', effect: () => ({ academic: 2, reputation: -1 }) }
+    ]
+  },
+  {
+    id: 'e_a_ai_1',
+    title: 'AI 写作风波',
+    description: '期刊编辑发来邮件，质疑你课题组最新投稿的论文是 AI 生成的，因为查重率异常低但废话连篇。',
+    category: 'academic',
+    choices: [
+        { text: '严查学生，发现确实用了 ChatGPT', description: '撤稿并严肃批评学生，声誉受损。', effect: () => ({ reputation: -2, academic: -1 }) },
+        { text: '“这就是我们人类的文笔！”', description: '硬刚编辑，结果被列入黑名单。', effect: () => ({ reputation: -3, academic: -1 }) },
+        { text: '用 AI 生成一封道歉信发回去', description: '编辑居然没看出来，但这事太魔幻了。', effect: () => ({ satisfaction: 1, reputation: -1 }) }
     ]
   }
 ];
@@ -649,6 +733,28 @@ const STUDENT_EVENTS: GameEvent[] = [
       { text: '虚心请教代码', description: '你跟着买了两手，小赚一笔经费。', effect: () => ({ resources: 2, reputation: -1 }) },
       { text: '劝他把炒股算法写成论文', description: '居然发了一篇金融科技的顶刊！', effect: () => ({ academic: 3 }) }
     ]
+  },
+  {
+    id: 'e_s_ai_cheat',
+    title: 'AI 作弊风云',
+    description: '你发现学生交上来的实验数据完美得离谱，像是AI生成的假数据。',
+    category: 'student',
+    choices: [
+        { text: '相信学生，也许是天才', description: '论文发表后被撤稿，你成了笑话。', effect: () => ({ reputation: -3, academic: -2 }) },
+        { text: '突击检查原始实验记录', description: '学生露馅了，你避免了一场学术灾难。', effect: () => ({ academic: 1, satisfaction: -1 }) },
+        { text: '以此为例，开展学术诚信教育', description: '组内风气好转。', effect: () => ({ reputation: 1 }) }
+    ]
+  },
+  {
+    id: 'e_s_depression',
+    title: '沉默的螺旋',
+    description: '一名学生连续两周没在群里发言，实验进度也停滞了。他似乎陷入了严重的抑郁。',
+    category: 'student',
+    choices: [
+        { text: '推荐心理咨询，准许放假', description: '项目延期，但救了一个人。', effect: () => ({ satisfaction: 2, academic: -1 }) },
+        { text: '施压：“大家都很累，别矫情”', description: '情况恶化，家长找上门来。', effect: () => ({ reputation: -5, satisfaction: -5 }) },
+        { text: '不管，让大师兄去聊', description: '大师兄也跟着抑郁了。', effect: () => ({ satisfaction: -2 }) }
+    ]
   }
 ];
 
@@ -784,6 +890,29 @@ const CAREER_EVENTS: GameEvent[] = [
         { text: '“唯物主义战士不信这个”', description: '你把鱼缸扔了，结果第二天就摔了一跤。', effect: () => ({ satisfaction: -1 }) },
         { text: '在鱼缸里养条锦鲤', description: '既美观又吉利。', effect: () => ({ satisfaction: 1 }) }
     ]
+  },
+  {
+    id: 'e_c_late_health',
+    title: '体检报告的红灯',
+    description: '年度体检结果出来了，医生看着你的报告直摇头：高血压、颈椎病、脂肪肝...',
+    category: 'career',
+    condition: (s, t, c, f, year) => year >= 15,
+    choices: [
+        { text: '遵医嘱，减少工作量', description: '身体好转，但学术产出大幅下降。', effect: () => ({ academic: -2, satisfaction: 1 }) },
+        { text: '不管它，吃药硬扛', description: '学术保持高产，但埋下了定时炸弹。', effect: () => ({ academic: 1 }), setFlag: 'health_strain' },
+        { text: '办理病退', description: '提前结束学术生涯，保命要紧。', effect: () => ({ resources: -5, academic: -5 }) }
+    ]
+  },
+  {
+    id: 'e_c_rivalry',
+    title: '死对头的晋升',
+    description: '当年不如你的死对头，现在居然成了你的顶头上司（院长）。',
+    category: 'career',
+    choices: [
+        { text: '忍辱负重，低头做人', description: '经费被卡，日子难过。', effect: () => ({ resources: -2, satisfaction: -1 }) },
+        { text: '公开唱反调', description: '被穿小鞋，但也赢得了一部分人的支持。', effect: () => ({ resources: -3, reputation: 1 }) },
+        { text: '抓他的把柄举报', description: '鱼死网破，两败俱伤。', effect: () => ({ reputation: -5 }) }
+    ]
   }
 ];
 
@@ -908,6 +1037,17 @@ const RESOURCE_EVENTS: GameEvent[] = [
       { text: '给学生多发劳务费', description: '学生高呼万岁，干劲十足。', effect: () => ({ satisfaction: 3, resources: -1 }) },
       { text: '升级办公室电脑椅', description: '坐着舒服多了。', effect: () => ({ satisfaction: 1, resources: -1 }) }
     ]
+  },
+  {
+    id: 'e_n_circle',
+    title: '圈子文化',
+    description: '有人邀请你加入一个隐秘的“互引群”，大家互相引用论文提升引用率。',
+    category: 'network',
+    choices: [
+        { text: '加入', description: '引用率暴涨，但你觉得这种行为很Low。', effect: () => ({ academic: 2, reputation: -1 }) },
+        { text: '拒绝', description: '你的论文引用率增长缓慢。', effect: () => ({ academic: 0 }) },
+        { text: '截图举报', description: '你在圈内被孤立了，但维持了正义。', effect: () => ({ reputation: 2, resources: -2 }) }
+    ]
   }
 ];
 
@@ -964,7 +1104,7 @@ const RISK_EVENTS: GameEvent[] = [
     choices: [
         { text: '立刻赶去现场安抚，承诺毕业', description: '人救下来了，但你被家长打了一顿。', effect: () => ({ satisfaction: 5, reputation: -2 }) },
         { text: '报警，让专业人士处理', description: '安全处理，但被学生贴上了“冷血”标签。', effect: () => ({ satisfaction: -5, reputation: -1 }) },
-        { text: '怕担责任，躲起来', description: '悲剧发生，你被千夫所指。', effect: () => ({ satisfaction: -20, reputation: -20 }) } // Instant Game Over
+        { text: '怕担责任，躲起来', description: '悲剧发生，你被千夫所指。', effect: () => ({ satisfaction: -20, reputation: -20 }) }
     ]
   },
   {
@@ -981,6 +1121,7 @@ const RISK_EVENTS: GameEvent[] = [
 ];
 
 // --- Chain Events ---
+// [Important] Split Death Event into two based on flags because Choice cannot have condition.
 export const CHAIN_EVENTS: GameEvent[] = [
   {
     id: 'ce_1',
@@ -1036,14 +1177,28 @@ export const CHAIN_EVENTS: GameEvent[] = [
         { text: '打点滴坚持工作', description: '精神可嘉，但医生下了病危通知书。', effect: () => ({ academic: 1, satisfaction: 1, reputation: 1 }), removeFlag: 'health_strain', setFlag: 'critical_health' }
     ]
   },
+  // [Fixed] Split Logic for Death Event: WITH Insurance
   {
-    id: 'ce_6',
-    title: '突发恶疾（连锁风险）',
-    description: '因为之前的带病工作，你的身体终于支撑不住了，倒在了实验台前。',
+    id: 'ce_6_saved',
+    title: 'ICU 里的重生',
+    description: '你倒在了实验台前，但幸亏购买了高端医疗保险，被连夜送往国外治疗。',
     category: 'risk',
-    condition: (stats, traits, sc, flags) => !!flags['critical_health'],
+    // Condition: Critical Health AND Has Insurance
+    condition: (stats, traits, sc, flags) => !!flags['critical_health'] && !!flags['has_insurance'],
     choices: [
-        { text: '抢救...', description: 'ICU 住了三个月，虽然捡回一条命，但学术生涯基本结束了。', effect: () => ({ academic: -10, resources: -10, satisfaction: -10, reputation: -10 }), removeFlag: 'critical_health' }
+        { text: '花钱保命', description: '虽然花光了积蓄并休养了一年，但你活下来了。', effect: () => ({ academic: -5, resources: -5 }), removeFlag: 'critical_health' }
+    ]
+  },
+  // [Fixed] Split Logic for Death Event: NO Insurance
+  {
+    id: 'ce_6_death',
+    title: '死亡倒计时',
+    description: '你倒在了实验台前。由于没有高端保险，加上常年积劳成疾，医院下了病危通知书...',
+    category: 'risk',
+    // Condition: Critical Health AND No Insurance
+    condition: (stats, traits, sc, flags) => !!flags['critical_health'] && !flags['has_insurance'],
+    choices: [
+        { text: '抢救无效...', description: '你永远地睡着了。（游戏结束）', effect: () => ({}), setFlag: 'died_of_overwork' }
     ]
   }
 ];
@@ -1074,7 +1229,7 @@ export const HIDDEN_EVENTS: GameEvent[] = [
     title: '桃李满天下（隐藏）',
     description: '你的学生在各行各业都成了大佬，回来联名给你办祝寿会。',
     category: 'student',
-    condition: (stats, traits, studentCount) => stats.satisfaction >= 18 && studentCount > 15,
+    condition: (stats, traits, studentCount) => stats.satisfaction >= 16 && studentCount > 15,
     choices: [
       { text: '感动落泪', description: '这辈子值了。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
     ]

@@ -38,7 +38,7 @@ export interface GameEvent {
 export interface LogEntry {
   year: number;
   message: string;
-  type: 'event' | 'achievement' | 'milestone' | 'risk' | 'gameover' | 'upgrade' | 'promotion';
+  type: 'event' | 'achievement' | 'milestone' | 'risk' | 'gameover' | 'upgrade' | 'promotion' | 'project';
 }
 
 export interface EventResult {
@@ -89,6 +89,31 @@ export interface Ending {
   bgColor: string;
 }
 
+export interface KPI {
+    year: number;
+    description: string;
+    condition: (stats: Stats) => boolean;
+    failMessage: string;
+}
+
+export interface ProjectDefinition {
+    id: string;
+    name: string;
+    type: 'national' | 'corporate' | 'talent';
+    duration: number; // Years to complete
+    reqStats: Partial<Stats>; // Requirement to apply
+    costPerYear: Partial<Stats>; // Maintenance cost (e.g. academic -1 due to focus)
+    reward: Partial<Stats>; // Reward on completion
+    penalty: Partial<Stats>; // Penalty if failed/unfinished
+    description: string;
+}
+
+export interface ActiveProject {
+    defId: string;
+    startYear: number;
+    progress: number; // Current years completed
+}
+
 export interface GameState {
   year: number;
   stats: Stats;
@@ -106,4 +131,5 @@ export interface GameState {
   endingId?: string; // ID of the specific ending triggered
   upgrades: string[]; // IDs of purchased upgrades
   title: string; // ID of current title
+  activeProject: ActiveProject | null; // Currently running project
 }

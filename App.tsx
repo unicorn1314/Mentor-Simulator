@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText } from 'lucide-react';
-import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement } from './types';
-import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES, ENDINGS } from './constants';
+import { BookOpen, Users, Trophy, Wallet, RefreshCw, AlertTriangle, GraduationCap, Briefcase, Award, CheckCircle2, Zap, Medal, Skull, Star, ShoppingCart, ArrowUpCircle, LayoutDashboard, ScrollText, Target, FileText, Timer } from 'lucide-react';
+import { GameState, Stats, Trait, GameEvent, LogEntry, Student, Achievement, ProjectDefinition } from './types';
+import { TRAITS, EVENT_POOL, HIDDEN_EVENTS, ACHIEVEMENTS, PHASE_EVALUATIONS, CHAIN_EVENTS, UPGRADES, TITLES, ENDINGS, KPIS, PROJECTS } from './constants';
 
 // --- Helper Components ---
 
@@ -67,11 +67,13 @@ export default function App() {
     flags: {},
     isGameOver: false,
     upgrades: [],
-    title: 'title_lecturer'
+    title: 'title_lecturer',
+    activeProject: null
   });
 
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
   const [showShop, setShowShop] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
   const [floatingTexts, setFloatingTexts] = useState<{ id: number, text: string, color: string, left: string, top: string }[]>([]);
   const [mobileTab, setMobileTab] = useState<'career' | 'stats'>('career');
 
@@ -144,7 +146,8 @@ export default function App() {
       flags: {},
       isGameOver: false,
       upgrades: [],
-      title: 'title_lecturer'
+      title: 'title_lecturer',
+      activeProject: null
     });
     setSelectedTraits([]);
     setMobileTab('career');
@@ -284,6 +287,18 @@ export default function App() {
       }
   };
 
+  const startProject = (projId: string) => {
+    const projDef = PROJECTS.find(p => p.id === projId);
+    if (!projDef) return;
+
+    setGameState(prev => ({
+        ...prev,
+        activeProject: { defId: projId, startYear: prev.year, progress: 0 },
+        history: [{ year: prev.year, message: `项目：申报了【${projDef.name}】`, type: 'project' }, ...prev.history]
+    }));
+    setShowProjects(false);
+  };
+
   const advanceYear = (bypassSummary = false) => {
     // Check for Retirement
     if (gameState.year >= RETIREMENT_YEAR) {
@@ -305,7 +320,7 @@ export default function App() {
       return;
     }
 
-    // Check for 5-Year Summary Phase
+    // Check for 5-Year Summary Phase (KPI Check)
     if (!bypassSummary && gameState.year % 5 === 0 && gameState.phase !== 'SUMMARY') {
         setGameState(prev => ({ ...prev, phase: 'SUMMARY' }));
         return;
@@ -341,6 +356,7 @@ export default function App() {
     // 1. Trait Synergies & Passives
     let passiveChanges: Partial<Stats> = {};
     let traitLogs: LogEntry[] = [];
+    let projectLogs: LogEntry[] = [];
     
     if (dAcademic || dReputation || dSatisfaction || dResources) {
          traitLogs.push({ year: nextYear, message: '【逆水行舟】由于行业竞争与知识迭代，部分属性自然衰减。', type: 'risk' });
@@ -386,7 +402,35 @@ export default function App() {
         passiveChanges.resources = (passiveChanges.resources || 0) + (effect.resources || 0);
     }
 
-    // 4. Check Promotion
+    // 4. Project Logic
+    let nextActiveProject = gameState.activeProject;
+    if (gameState.activeProject) {
+        const projDef = PROJECTS.find(p => p.id === gameState.activeProject!.defId);
+        if (projDef) {
+            // Apply cost
+            passiveChanges.academic = (passiveChanges.academic || 0) + (projDef.costPerYear.academic || 0);
+            passiveChanges.resources = (passiveChanges.resources || 0) + (projDef.costPerYear.resources || 0);
+            passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) + (projDef.costPerYear.satisfaction || 0);
+            
+            // Advance progress
+            const newProgress = gameState.activeProject.progress + 1;
+            
+            if (newProgress >= projDef.duration) {
+                // Project Completed!
+                projectLogs.push({ year: nextYear, message: `项目结题：【${projDef.name}】圆满完成！`, type: 'project' });
+                passiveChanges.academic = (passiveChanges.academic || 0) + (projDef.reward.academic || 0);
+                passiveChanges.resources = (passiveChanges.resources || 0) + (projDef.reward.resources || 0);
+                passiveChanges.reputation = (passiveChanges.reputation || 0) + (projDef.reward.reputation || 0);
+                passiveChanges.satisfaction = (passiveChanges.satisfaction || 0) + (projDef.reward.satisfaction || 0);
+                nextActiveProject = null;
+            } else {
+                nextActiveProject = { ...gameState.activeProject, progress: newProgress };
+            }
+        }
+    }
+
+
+    // 5. Check Promotion
     let nextTitleId = gameState.title;
     let promotionLog: LogEntry | null = null;
     const currentLevel = currentTitleDef?.level || 1;
@@ -400,7 +444,7 @@ export default function App() {
     }
 
 
-    // 5. Student Lifecycle
+    // 6. Student Lifecycle
     const { newStudents, logMessages, statChanges } = processStudentLifecycle(gameState.stats, gameState.students, nextYear);
     
     // Recruit new students
@@ -409,7 +453,7 @@ export default function App() {
         newStudents.push(generateStudent(nextYear));
     }
 
-    // 6. Apply Changes (Allow going below 0 for Game Over check)
+    // 7. Apply Changes (Allow going below 0 for Game Over check)
     const finalStats = {
         academic: gameState.stats.academic + (passiveChanges.academic || 0) + (statChanges.academic || 0),
         reputation: gameState.stats.reputation + (passiveChanges.reputation || 0) + (statChanges.reputation || 0),
@@ -444,7 +488,7 @@ export default function App() {
     finalStats.satisfaction = Math.min(20, finalStats.satisfaction);
     finalStats.resources = Math.min(20, finalStats.resources);
 
-    // 7. Check Achievements
+    // 8. Check Achievements
     let unlockedAchievs = [...gameState.achievements];
     let achievLogs: LogEntry[] = [];
     
@@ -463,7 +507,7 @@ export default function App() {
         }
     });
     
-    const allLogs = [...achievLogs, ...logMessages, ...traitLogs];
+    const allLogs = [...projectLogs, ...achievLogs, ...logMessages, ...traitLogs];
     if (promotionLog) allLogs.push(promotionLog);
 
     setGameState(prev => ({
@@ -475,7 +519,8 @@ export default function App() {
       studentCount: newStudents.filter(s => s.status === 'active').length,
       history: [...allLogs, ...prev.history],
       phase: 'PLAYING',
-      title: nextTitleId
+      title: nextTitleId,
+      activeProject: nextActiveProject
     }));
 
     // Trigger event after short delay
@@ -551,8 +596,19 @@ export default function App() {
   };
 
   const closeSummary = () => {
-      // Explicitly bypass the summary check to advance to the next year
-      advanceYear(true);
+      // Check KPI before advancing
+      const failedKPI = KPIS.find(k => k.year === gameState.year && !k.condition(gameState.stats));
+      if (failedKPI) {
+          setGameState(prev => ({
+              ...prev,
+              phase: 'GAMEOVER',
+              isGameOver: true,
+              gameOverReason: failedKPI.failMessage
+          }));
+      } else {
+          // Explicitly bypass the summary check to advance to the next year
+          advanceYear(true);
+      }
   };
 
   // Start first event
@@ -576,7 +632,7 @@ export default function App() {
         <Card className="p-8 transform hover:scale-105 transition-transform duration-300 cursor-default">
           <p className="text-base md:text-lg text-stone-600 mb-6 leading-relaxed">
             你即将入职某知名高校，开启长达30年的导师生涯。<br/>
-            <span className="text-red-600 font-bold">警告：属性过低可能导致直接解聘或破产！</span><br/>
+            <span className="text-red-600 font-bold">警告：非升即走，指标不达标将直接解聘！</span><br/>
             是成为学术泰斗，还是桃李满天下的教育家？<br/>
             一切由你决定。
           </p>
@@ -767,10 +823,85 @@ export default function App() {
       )
   };
 
+  const renderProjectSelector = () => {
+      // Filter available projects (active project blocks new ones)
+      const isBusy = !!gameState.activeProject;
+
+      return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="max-w-3xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-stone-800 animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+                <div className="bg-stone-800 text-white p-4 flex justify-between items-center">
+                    <h3 className="text-xl font-bold flex items-center gap-2"><FileText /> 申报项目</h3>
+                    <button onClick={() => setShowProjects(false)} className="text-white hover:text-stone-300 font-bold">关闭</button>
+                </div>
+                <div className="p-6 overflow-y-auto">
+                    {isBusy ? (
+                        <div className="text-center py-8 text-stone-500">
+                            你当前有正在进行的项目，无法同时申报多个。
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                            {PROJECTS.map(proj => {
+                                const meetsReq = (!proj.reqStats.academic || gameState.stats.academic >= proj.reqStats.academic) &&
+                                                 (!proj.reqStats.reputation || gameState.stats.reputation >= proj.reqStats.reputation) &&
+                                                 (!proj.reqStats.resources || gameState.stats.resources >= proj.reqStats.resources) &&
+                                                 (!proj.reqStats.satisfaction || gameState.stats.satisfaction >= proj.reqStats.satisfaction);
+                                
+                                return (
+                                    <div key={proj.id} className="border-2 border-stone-200 rounded-lg p-4 hover:border-stone-400 transition-colors">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="font-bold text-lg text-stone-800">{proj.name}</h4>
+                                                <span className="text-xs bg-stone-100 px-2 py-1 rounded text-stone-500 font-bold uppercase">{proj.type === 'national' ? '国家级' : proj.type === 'corporate' ? '企业横向' : '人才项目'}</span>
+                                                <span className="text-xs bg-blue-50 px-2 py-1 rounded text-blue-600 font-bold ml-2">周期: {proj.duration}年</span>
+                                            </div>
+                                            <Button 
+                                                onClick={() => startProject(proj.id)} 
+                                                disabled={!meetsReq} 
+                                                variant={meetsReq ? 'primary' : 'secondary'}
+                                                className="py-1 px-4 text-sm h-10"
+                                            >
+                                                {meetsReq ? '申报' : '条件不足'}
+                                            </Button>
+                                        </div>
+                                        <p className="text-stone-600 text-sm mb-3">{proj.description}</p>
+                                        
+                                        <div className="grid grid-cols-3 gap-2 text-xs bg-stone-50 p-2 rounded">
+                                            <div>
+                                                <span className="font-bold text-stone-500 block">门槛</span>
+                                                {proj.reqStats.academic && <div>学术 {proj.reqStats.academic}</div>}
+                                                {proj.reqStats.reputation && <div>口碑 {proj.reqStats.reputation}</div>}
+                                                {proj.reqStats.resources && <div>资源 {proj.reqStats.resources}</div>}
+                                                {proj.reqStats.satisfaction && <div>学生 {proj.reqStats.satisfaction}</div>}
+                                            </div>
+                                             <div>
+                                                <span className="font-bold text-red-500 block">每年的消耗/代价</span>
+                                                {Object.entries(proj.costPerYear).map(([k,v]) => <div key={k}>{k} {v}</div>)}
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-green-600 block">结题回报</span>
+                                                {Object.entries(proj.reward).map(([k,v]) => <div key={k}>{k} +{v}</div>)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      );
+  };
+
   const renderSummary = () => {
       const evaluation = PHASE_EVALUATIONS.find(e => gameState.year >= e.minYear && gameState.year <= e.maxYear) || PHASE_EVALUATIONS[0];
       const activeStudents = gameState.students.filter(s => s.status === 'active').length;
       const graduatedStudents = gameState.students.filter(s => s.status === 'graduated').length;
+      
+      // KPI Check preview
+      const nextKPI = KPIS.find(k => k.year === gameState.year);
+      const kpiPassed = nextKPI ? nextKPI.condition(gameState.stats) : true;
 
       return (
         <div className="fixed inset-0 bg-stone-900/80 flex items-center justify-center p-4 z-50 backdrop-blur-md">
@@ -801,7 +932,21 @@ export default function App() {
                         </div>
                     </div>
 
-                    <Button onClick={closeSummary} className="w-full">开启下一个五年</Button>
+                    {nextKPI && (
+                        <div className={`mb-6 p-4 border-2 rounded-lg text-center ${kpiPassed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                            <h4 className="font-bold mb-2 uppercase text-sm tracking-wider">非升即走考核结果</h4>
+                            <p className="mb-2">{nextKPI.description}</p>
+                            {kpiPassed ? (
+                                <span className="text-green-600 font-bold flex items-center justify-center gap-2"><CheckCircle2/> 考核通过</span>
+                            ) : (
+                                <span className="text-red-600 font-bold flex items-center justify-center gap-2"><AlertTriangle/> 考核失败 (将解聘)</span>
+                            )}
+                        </div>
+                    )}
+
+                    <Button onClick={closeSummary} className="w-full">
+                        {kpiPassed ? '开启下一个五年' : '接受解聘通知'}
+                    </Button>
                 </div>
             </div>
         </div>
@@ -881,6 +1026,14 @@ export default function App() {
     const hasAffordableUpgrade = UPGRADES.some(u => 
         !gameState.upgrades.includes(u.id) && gameState.stats.resources >= u.cost
     );
+
+    // KPI Calc
+    const currentKPIIndex = Math.floor((gameState.year - 1) / 5);
+    const nextKPITarget = KPIS[currentKPIIndex];
+    const kpiDeadline = (currentKPIIndex + 1) * 5;
+
+    // Project Progress
+    const activeProjDef = gameState.activeProject ? PROJECTS.find(p => p.id === gameState.activeProject!.defId) : null;
 
     return (
     <div className="min-h-screen bg-stone-100 pb-20 md:pb-8 relative">
@@ -1004,17 +1157,58 @@ export default function App() {
                  <div className="font-serif italic text-stone-500 text-center sm:text-left hidden md:block">
                     "{gameState.history[0]?.message || '新的学年开始了...'}"
                  </div>
-                 <div className="flex gap-2 w-full sm:w-auto">
-                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none relative">
+                 <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                     <Button onClick={() => setShowProjects(true)} variant="secondary" className="flex-1 sm:flex-none relative whitespace-nowrap">
+                         <FileText size={18} /> 申报项目
+                     </Button>
+                     <Button onClick={() => setShowShop(true)} variant="secondary" className="flex-1 sm:flex-none relative whitespace-nowrap">
                          <ShoppingCart size={18} /> 建设
                          {hasAffordableUpgrade && (
                             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white"></span>
                          )}
                      </Button>
-                     <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="flex-1 sm:flex-none">
+                     <Button onClick={() => advanceYear(false)} disabled={gameState.phase === 'EVENT' || gameState.phase === 'RESULT' || gameState.phase === 'SUMMARY'} className="flex-1 sm:flex-none whitespace-nowrap">
                         {gameState.year % 5 === 0 && gameState.year < RETIREMENT_YEAR ? '阶段总结' : '下一年'}
                      </Button>
                  </div>
+            </div>
+
+             {/* System Status: KPI & Project */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* KPI Tracker */}
+                {nextKPITarget && (
+                    <div className="bg-stone-50 border border-stone-200 rounded-lg p-3 flex items-center justify-between">
+                        <div>
+                             <div className="text-xs font-bold text-stone-400 uppercase flex items-center gap-1">
+                                <Target size={12} /> 非升即走考核 (Year {kpiDeadline})
+                             </div>
+                             <div className="text-sm font-bold text-stone-700 mt-1">{nextKPITarget.description}</div>
+                        </div>
+                        <div className="text-2xl font-bold text-stone-300">
+                             {kpiDeadline - gameState.year}y
+                        </div>
+                    </div>
+                )}
+                
+                {/* Active Project */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                     <div className="text-xs font-bold text-blue-400 uppercase flex items-center gap-1">
+                        <Timer size={12} /> 当前项目
+                     </div>
+                     {activeProjDef ? (
+                         <div className="flex justify-between items-end">
+                             <div>
+                                 <div className="text-sm font-bold text-blue-800 mt-1">{activeProjDef.name}</div>
+                                 <div className="text-xs text-blue-600">进度: {gameState.activeProject!.progress}/{activeProjDef.duration} 年</div>
+                             </div>
+                             <div className="w-16 h-1.5 bg-blue-200 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${(gameState.activeProject!.progress / activeProjDef.duration) * 100}%` }}></div>
+                             </div>
+                         </div>
+                     ) : (
+                         <div className="text-sm text-blue-400 italic mt-1">暂无在研项目</div>
+                     )}
+                </div>
             </div>
 
             {/* Desktop Student List Preview (Hidden on Mobile, moved to stats tab) */}
@@ -1067,6 +1261,7 @@ export default function App() {
                             entry.type === 'risk' ? 'border-red-500 bg-red-50' :
                             entry.type === 'promotion' ? 'border-purple-500 bg-purple-50' :
                             entry.type === 'upgrade' ? 'border-blue-500 bg-blue-50' :
+                            entry.type === 'project' ? 'border-indigo-500 bg-indigo-50' :
                             entry.type === 'event' ? 'border-blue-400 bg-white' : 'border-stone-200'
                         }`}>
                             <span className="text-stone-400 font-mono text-xs mr-2">YEAR {entry.year}</span>
@@ -1099,6 +1294,7 @@ export default function App() {
 
       {/* Modals */}
       {showShop && renderShop()}
+      {showProjects && renderProjectSelector()}
       {gameState.phase === 'EVENT' && renderEvent()}
       {gameState.phase === 'RESULT' && renderResult()}
       {gameState.phase === 'SUMMARY' && renderSummary()}

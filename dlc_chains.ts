@@ -11,7 +11,6 @@ export const NEW_CHAIN_EVENTS: GameEvent[] = [
         description: '入职培训上，一位海归博士“贾教授”公开质疑你的研究方向是“夕阳产业”，并扬言要比你先拿到杰青。',
         category: 'career',
         // 早期触发 (2-8年)
-        // Check if ANY outcome flag is present to prevent repetition
         condition: (s, t, c, f, y) => y >= 2 && y <= 8 && !f['rival_met'] && !f['rival_peace'],
         choices: [
             { text: '当众回怼，立下战书', description: '梁子结下了！你们开始了长达几十年的明争暗斗。', effect: () => ({ academic: 1 }), setFlag: 'rival_met' },
@@ -97,7 +96,7 @@ export const NEW_CHAIN_EVENTS: GameEvent[] = [
         // Check both outcome flags to prevent repetition
         condition: (s, t, c, f, y) => !f['safe_reported'] && !f['safe_hidden'] && y > 3,
         choices: [
-            { text: '立即上报保卫处和公安', description: '虽然挨了处分，实验室被封停整顿，但没有酿成大祸。', effect: () => ({ reputation: -2, academic: -2 }), setFlag: 'safe_reported' },
+            { text: '立即上报保卫处和公安', description: '你展现了极高的原则性，受到了校方表彰，虽然实验室整顿了一周。', effect: () => ({ reputation: 2, academic: 0 }), setFlag: 'safe_reported' },
             { text: '全组封闭寻找，严禁声张', description: '最后在废液桶边找到了，虚惊一场，但埋下了隐患。', effect: () => ({ satisfaction: -2 }), setFlag: 'safe_hidden' },
             { text: '怀疑某个学生，严厉审讯', description: '学生心理崩溃，虽然找回了药品，但师生关系破裂。', effect: () => ({ satisfaction: -5 }), setFlag: 'safe_hidden' }
         ]

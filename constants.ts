@@ -87,28 +87,28 @@ export const TITLES: Title[] = [
         name: '副教授',
         level: 2,
         condition: (s) => s.stats.academic >= 12 && s.stats.reputation >= 10 && s.year >= 5,
-        passive: () => ({ resources: 1 })
+        
     },
     {
         id: 'title_professor',
         name: '教授',
         level: 3,
         condition: (s) => s.stats.academic >= 16 && s.stats.reputation >= 14 && s.year >= 10,
-        passive: () => ({ resources: 1, reputation: 1 })
+        
     },
     {
         id: 'title_distinguished',
         name: '杰出教授',
         level: 4,
         condition: (s) => s.stats.academic >= 19 && s.stats.reputation >= 18 && s.achievements.length >= 2,
-        passive: () => ({ resources: 2, reputation: 1 })
+       
     },
     {
         id: 'title_academician',
         name: '院士',
         level: 5,
         condition: (s) => s.stats.academic >= 20 && s.stats.reputation >= 20 && s.achievements.length >= 4,
-        passive: () => ({ resources: 2, reputation: 2, academic: 1 })
+       
     }
 ];
 

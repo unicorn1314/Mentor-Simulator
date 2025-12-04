@@ -511,7 +511,7 @@ export const DLC_EVENTS: GameEvent[] = [
         title: '退休前的最后一课',
         description: '你到了退休年龄，最后一堂课来了上百名校友，甚至有诺奖得主（你的学生）专程回来听课。',
         category: 'student',
-        condition: (stats, traits, sc, flags, year) => year >= 30 && stats.satisfaction >= 15,
+        condition: (stats, traits, sc, flags, year) => year >= 29 && stats.satisfaction >= 18 && studentCount >= 19  
         choices: [
           { text: '讲最后一次专业课，全程落泪', description: '感动全场，校史馆把你的教案收藏，学生们众筹给你立了雕像。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
           { text: '不讲课本，聊人生和科研的遗憾', description: '内容被整理成书，成了科研人的必读书，版税拿到手软。', effect: () => ({ resources: 6, academic: 2 }) },

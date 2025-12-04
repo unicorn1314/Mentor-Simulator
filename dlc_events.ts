@@ -1,6 +1,7 @@
 import { GameEvent } from './types';
 
 export const DLC_EVENTS: GameEvent[] = [
+    // --- 原有事件保留 ---
     // --- Academic & Sci-Fi ---
     {
         id: 'e_dlc_1',
@@ -46,7 +47,41 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '默默撤稿保平安', description: '虽然损失声誉，但避免了更麻烦的调查。', effect: () => ({ academic: -1, reputation: -1 }) }
         ]
     },
-    
+    // --- 新增 Academic 事件 ---
+    {
+        id: 'e_dlc_ac_1',
+        title: 'AI写基金申请书',
+        description: '组里博后用GPT-8写了份基金申请书，逻辑比你手写的还好，但查重率0%却透着“机器味”。',
+        category: 'academic',
+        choices: [
+            { text: '直接提交，赌评审看不出来', description: '居然中了！但评审私下说“这文风不像你”。', effect: () => ({ resources: 5, academic: 1, reputation: -1 }) },
+            { text: '逐句修改，保留框架', description: '耗时两周，但申请书既有逻辑又有温度，顺利中标。', effect: () => ({ resources: 4, academic: 2 }) },
+            { text: '怒斥博后，坚持手写', description: '写得焦头烂额，最终落选，博后觉得你食古不化。', effect: () => ({ resources: -1, satisfaction: -2 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ac_2',
+        title: '古早数据复活',
+        description: '翻实验室仓库时，发现一箱软盘，里面是90年代未发表的实验数据，居然能完美补全你现在的课题。',
+        category: 'academic',
+        choices: [
+            { text: '直接用，署上老教授名字', description: '老教授感动落泪，带你发了顶刊。', effect: () => ({ academic: 3, reputation: 1 }) },
+            { text: '重新验证数据', description: '发现当年的仪器误差，修正后结论更严谨。', effect: () => ({ academic: 2, satisfaction: 1 }) },
+            { text: '当废品卖掉软盘', description: '后来得知同领域团队靠类似数据发了Nature，悔青肠子。', effect: () => ({ academic: -2, satisfaction: -3 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ac_3',
+        title: '跨学科合作陷阱',
+        description: '艺术学院邀请你合作“科学可视化”展览，要求把你的实验数据做成沉浸式装置，预算要你出一半。',
+        category: 'academic',
+        choices: [
+            { text: '全力配合，砸钱做精品', description: '展览火出圈，你的课题成了网红，招生爆满。', effect: () => ({ reputation: 3, resources: -3, academic: 1 }) },
+            { text: '只给数据，不参与也不掏钱', description: '装置做得四不像，艺术院骂你小气，学术圈笑你不懂审美。', effect: () => ({ reputation: -2 }) },
+            { text: '要求艺术生帮你做课题配图', description: '配图美到被期刊选为封面，展览摆烂也无所谓了。', effect: () => ({ academic: 2, reputation: -1 }) }
+        ]
+    },
+
     // --- Career & Admin ---
     {
         id: 'e_dlc_2',
@@ -103,6 +138,40 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '假装没看见', description: '对方以为你默认了，后续合作总给打折。', effect: () => ({ resources: 1 }) }
         ]
     },
+    // --- 新增 Career 事件 ---
+    {
+        id: 'e_dlc_ca_1',
+        title: '绩效考评内卷',
+        description: '学校搞“量化考核”，要求每年至少发3篇SCI、带5个学生、拿1个项目，少一项扣绩效。',
+        category: 'career',
+        choices: [
+            { text: '疯狂接项目发灌水论文', description: '绩效拿满，但学生累到退学，同行背后骂你卷王。', effect: () => ({ resources: 2, academic: -1, satisfaction: -3 }) },
+            { text: '找教务处据理力争', description: '考核标准放宽，全院感谢你，但你被领导记恨。', effect: () => ({ reputation: 2, resources: -1 }) },
+            { text: '摆烂，扣绩效就扣', description: '专心做一个高质量课题，年底发了顶刊，领导又来拉拢你。', effect: () => ({ academic: 3, resources: -2, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ca_2',
+        title: '会议室抢座大战',
+        description: '全院大会只有前排有充电口和麦克风，早到的教授们开始抢座，甚至占座。',
+        category: 'career',
+        choices: [
+            { text: '凌晨6点去占座', description: '抢到C位，发言被院长重视，就是少睡了3小时。', effect: () => ({ reputation: 1, satisfaction: -1 }) },
+            { text: '带折叠充电宝坐后排', description: '安静摸鱼改论文，没人打扰效率超高。', effect: () => ({ academic: 2 }) },
+            { text: '故意把水杯放前排占座后走掉', description: '被老教授骂没素质，全院通报批评。', effect: () => ({ reputation: -2 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ca_3',
+        title: '办公用品申领荒',
+        description: '学校后勤改革，中性笔、打印纸每月限量申领，实验室已经快断供了。',
+        category: 'career',
+        choices: [
+            { text: '找后勤主任送礼', description: '申领额度翻倍，其他教授眼红举报你。', effect: () => ({ resources: -1, reputation: -1 }) },
+            { text: '让学生从家里带纸和笔', description: '学生吐槽“上班还得自带装备”，满意度暴跌。', effect: () => ({ satisfaction: -2 }) },
+            { text: '网购批发办公用品', description: '花小钱解决大问题，实验室成了“办公用品小卖部”。', effect: () => ({ resources: -1, satisfaction: 2 }) }
+        ]
+    },
 
     // --- Student Life ---
     {
@@ -147,6 +216,40 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '正式收养，取名“小白鼠”', description: '成为课题组吉祥物，缓解科研压力。', effect: () => ({ satisfaction: 3, resources: -1 }) },
             { text: '勒令送走', description: '师兄emo了三天，实验频频出错。', effect: () => ({ academic: -1, satisfaction: -2 }) },
             { text: '做成“动物行为学观察实验”', description: '意外发了篇科普文章。', effect: () => ({ academic: 1, satisfaction: 1 }) }
+        ]
+    },
+    // --- 新增 Student 事件 ---
+    {
+        id: 'e_dlc_st_1',
+        title: '毕业答辩突发状况',
+        description: '你的硕士生答辩时，PPT突然崩了，U盘也读不出来，评委脸色越来越差。',
+        category: 'student',
+        choices: [
+            { text: '让学生口头答辩', description: '学生临场发挥超棒，评委夸应变能力强，顺利通过。', effect: () => ({ academic: 1, satisfaction: 2 }) },
+            { text: '冲回办公室拿备份U盘', description: '迟到10分钟，评委不耐烦，给了“修改后答辩”。', effect: () => ({ academic: -1, satisfaction: -1 }) },
+            { text: '当场帮学生圆场，甩锅给学校系统', description: '评委被逗笑，放过了学生，但你被教务处警告。', effect: () => ({ reputation: -1, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_st_2',
+        title: '实验室奶茶自由',
+        description: '学生们众筹想买个奶茶机放实验室，每人每月扣50块，问你同不同意。',
+        category: 'student',
+        choices: [
+            { text: '同意，还自掏腰包加预算', description: '奶茶机到位，学生实验效率翻倍，就是总有人偷喝不加糖。', effect: () => ({ satisfaction: 4, resources: -1 }) },
+            { text: '反对，说影响实验安全', description: '学生偷偷买了迷你咖啡机，躲在通风橱里喝。', effect: () => ({ satisfaction: -2, academic: 0 }) },
+            { text: '要求奶茶机只在休息时间用', description: '劳逸结合，学生既开心又不耽误工作。', effect: () => ({ satisfaction: 2, academic: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_st_3',
+        title: '师弟师妹抢工位',
+        description: '新来的研一学生抢了师姐用了三年的靠窗工位，师姐气到要罢工。',
+        category: 'student',
+        choices: [
+            { text: '让师弟把工位让出来', description: '师姐安心实验，师弟觉得你偏心，消极怠工。', effect: () => ({ academic: 1, satisfaction: -1 }) },
+            { text: '抽签决定工位归属', description: '公平公正，两人都没意见，就是师姐抽输了哭了半天。', effect: () => ({ satisfaction: 1 }) },
+            { text: '把自己的办公室工位让出来', description: '学生们都感动了，抢着帮你干活，你只能蹲实验室角落办公。', effect: () => ({ satisfaction: 3, academic: -1 }) }
         ]
     },
 
@@ -206,6 +309,40 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '让学生出镜当主播', description: '学生成了学术圈顶流，天天被粉丝追着问问题。', effect: () => ({ satisfaction: 2, academic: -1 }) }
         ]
     },
+    // --- 新增 Network 事件 ---
+    {
+        id: 'e_dlc_ne_1',
+        title: '学术群聊误发消息',
+        description: '你把吐槽“院长的项目评审就是走过场”的消息，误发到了全院教授群，已读人数瞬间破百。',
+        category: 'network',
+        choices: [
+            { text: '假装号被盗了', description: '大家半信半疑，院长私下找你喝茶，没明说但气氛尴尬。', effect: () => ({ reputation: -1, satisfaction: -1 }) },
+            { text: '立刻补一句“反例如下”，假装是学术讨论', description: '强行圆成学术观点，反应快被夸机智，就是手心全是汗。', effect: () => ({ reputation: 1, satisfaction: 0 }) },
+            { text: '干脆继续吐槽，说出大家的心声', description: '被院长移出群聊，但其他教授私下给你发红包点赞。', effect: () => ({ reputation: -2, satisfaction: 3 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ne_2',
+        title: '展会薅羊毛大赛',
+        description: '参加行业展会，学生们比谁薅的周边（帆布袋、笔记本、徽章）多，甚至跟其他学校的人抢。',
+        category: 'network',
+        choices: [
+            { text: '帮学生一起薅，主打一个不亏', description: '薅了三大袋，实验室办公用品全包了，就是被同行拍下来发朋友圈。', effect: () => ({ resources: 1, reputation: -1, satisfaction: 2 }) },
+            { text: '制止学生，专注交流学术', description: '认识了大牛教授，拿到合作机会，学生抱怨没薅到好看的徽章。', effect: () => ({ academic: 2, satisfaction: -1 }) },
+            { text: '把薅来的周边分给其他展位的同行', description: '人脉暴涨，好多人主动加你微信，后续合作不断。', effect: () => ({ reputation: 2, academic: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ne_3',
+        title: '合作导师放鸽子',
+        description: '你约了外校的大牛导师合作申请重大项目，提交前一天他突然说没空参与，理由是“要带孙子逛公园”。',
+        category: 'network',
+        choices: [
+            { text: '卑微求情，说项目成了分他通讯作者', description: '大牛同意了，但要求第一作者给他的学生，你组里的博后气到离职。', effect: () => ({ academic: 1, satisfaction: -2, resources: 3 }) },
+            { text: '临时换合作导师，找同门师兄', description: '项目顺利提交，还拉近了和师兄的关系，就是熬夜改了一整晚申请书。', effect: () => ({ academic: 2, satisfaction: -1 }) },
+            { text: '放弃申请，专注现有课题', description: '虽然丢了大项目，但把现有课题做深，年底发了篇重磅论文。', effect: () => ({ academic: 3, resources: -1 }) }
+        ]
+    },
 
     // --- Risk ---
     {
@@ -250,6 +387,40 @@ export const DLC_EVENTS: GameEvent[] = [
             { text: '主动联系期刊说明情况', description: '虽然撤稿了，但赢得了学术诚信声誉。', effect: () => ({ reputation: 1, academic: -1 }) },
             { text: '甩锅给合作方', description: '互撕大战让你声名狼藉。', effect: () => ({ reputation: -3 }) },
             { text: '抓紧时间用该成果申个专利', description: '专利下来了，但被同行鄙视。', effect: () => ({ resources: 2, academic: -1 }) }
+        ]
+    },
+    // --- 新增 Risk 事件 ---
+    {
+        id: 'e_dlc_ri_1',
+        title: '试剂瓶标签脱落',
+        description: '实验室冰箱里的一瓶剧毒试剂标签掉了，没人知道是什么，闻起来还有点甜。',
+        category: 'risk',
+        choices: [
+            { text: '取样送去检测中心', description: '确认是氰化物，及时封存，避免了事故，被评为安全标兵。', effect: () => ({ reputation: 2, resources: -1 }) },
+            { text: '凭经验猜测，随便贴个标签', description: '学生用它做实验，幸好只是轻微中毒，你被停职检查。', effect: () => ({ academic: -3, reputation: -2 }) },
+            { text: '直接扔掉，眼不见为净', description: '被环保部门查到，实验室被罚巨款，还上了新闻。', effect: () => ({ resources: -4, reputation: -3 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ri_2',
+        title: '实验记录丢失',
+        description: '你手写的核心实验记录本丢了，里面是三年的关键数据，马上要结题了。',
+        category: 'risk',
+        choices: [
+            { text: '发动全组翻遍实验室和垃圾桶', description: '在保洁阿姨的垃圾袋里找到，数据保住，就是臭烘烘的。', effect: () => ({ academic: 2, satisfaction: -1 }) },
+            { text: '凭记忆补写记录', description: '数据和原始有出入，结题被专家质疑，项目延期。', effect: () => ({ academic: -2, resources: -1 }) },
+            { text: '坦白记录丢失，申请延期结题', description: '专家夸你诚实，给了延期半年，学生们松了一口气。', effect: () => ({ reputation: 1, satisfaction: 1 }) }
+        ]
+    },
+    {
+        id: 'e_dlc_ri_3',
+        title: '校庆表演翻车',
+        description: '校庆被安排表演“科研人之歌”诗朗诵，你紧张到忘词，还把“SCI”念成了“KTV”。',
+        category: 'risk',
+        choices: [
+            { text: '当场尬笑，即兴编词圆场', description: '“KTV里唱科研，SCI里写青春”，台下笑成一片，反而火了。', effect: () => ({ reputation: 2, satisfaction: 1 }) },
+            { text: '跑下台，假装身体不舒服', description: '被校领导批评没集体荣誉感，校庆奖金没了。', effect: () => ({ resources: -1, reputation: -2 }) },
+            { text: '硬着头皮念完，全程面无表情', description: '没人记住你的翻车，只觉得你高冷，反而有学生粉你。', effect: () => ({ satisfaction: -1, reputation: 1 }) }
         ]
     },
 
@@ -320,6 +491,43 @@ export const DLC_EVENTS: GameEvent[] = [
           { text: '接受条件，共建实验室', description: '科研条件大幅改善，同行议论纷纷。', effect: () => ({ resources: 10, academic: 3, reputation: -2 }) },
           { text: '拒绝挂名，只接受匿名捐赠', description: '他被你的风骨打动，捐了双倍。', effect: () => ({ resources: 20, reputation: 3 }) },
           { text: '建议他设立奖学金', description: '成为教育界美谈，你获得了“伯乐奖”。', effect: () => ({ reputation: 5, satisfaction: 3 }) }
+        ]
+    },
+    // --- 新增 Hidden 事件 ---
+    {
+        id: 'e_h_lab_celebrity',
+        title: '实验室成网红打卡点',
+        description: '你之前和学术博主合作的视频爆火，游客天天堵在实验室门口打卡，甚至有人翻窗户进来拍照。',
+        category: 'academic',
+        condition: (stats, traits, sc, flags) => stats.reputation >= 15 && flags['media_exposure'],
+        choices: [
+          { text: '开放限时参观，收门票补贴实验室', description: '赚了不少钱，但实验总被打扰，学生苦不堪言。', effect: () => ({ resources: 8, academic: -2, satisfaction: -1 }) },
+          { text: '申请学校安保，禁止外人进入', description: '恢复安静，但网红游客骂你“耍大牌”，口碑下滑。', effect: () => ({ reputation: -1, academic: 2 }) },
+          { text: '把实验室做成科普体验馆', description: '既满足游客又做了科普，被评为“科普教育基地”。', effect: () => ({ reputation: 5, resources: 5, satisfaction: 2 }) }
+        ]
+    },
+    {
+        id: 'e_h_retirement_class',
+        title: '退休前的最后一课',
+        description: '你到了退休年龄，最后一堂课来了上百名校友，甚至有诺奖得主（你的学生）专程回来听课。',
+        category: 'student',
+        condition: (stats, traits, sc, flags, year) => year >= 30 && stats.satisfaction >= 15,
+        choices: [
+          { text: '讲最后一次专业课，全程落泪', description: '感动全场，校史馆把你的教案收藏，学生们众筹给你立了雕像。', effect: () => ({ reputation: 5, satisfaction: 5 }) },
+          { text: '不讲课本，聊人生和科研的遗憾', description: '内容被整理成书，成了科研人的必读书，版税拿到手软。', effect: () => ({ resources: 6, academic: 2 }) },
+          { text: '提前下课，和老同事去喝酒', description: '大家说你随性洒脱，最后一课成了校园传说，就是校友有点失望。', effect: () => ({ satisfaction: 4, reputation: 1 }) }
+        ]
+    },
+    {
+        id: 'e_h_nobel_jury',
+        title: '诺奖评委的匿名调研',
+        description: '你收到匿名邮件，是诺贝尔奖评审团的调研，问你认为本年度该领域最有价值的研究是谁的。',
+        category: 'academic',
+        condition: (stats, traits, sc, flags) => stats.academic >= 25 && flags['nobel_winner'],
+        choices: [
+          { text: '推荐自己的竞争对手', description: '对方获奖后，公开感谢你的公正，两人冰释前嫌合作研究。', effect: () => ({ academic: 4, reputation: 3 }) },
+          { text: '推荐自己的学生', description: '学生成了最年轻的诺奖得主，你被称为“伯乐中的伯乐”。', effect: () => ({ reputation: 4, satisfaction: 4 }) },
+          { text: '推荐自己未发表的研究', description: '评审团认为你功利心太重，取消了你的提名资格，得不偿失。', effect: () => ({ academic: -2, reputation: -2 }) }
         ]
     }
 ];

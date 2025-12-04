@@ -669,6 +669,7 @@ const buyUpgrade = (upgradeId: string) => {
         <div className="mb-8">
             <h1 className="text-4xl md:text-6xl font-bold text-stone-800 serif tracking-tighter mb-4">导师模拟器</h1>
             <p className="text-lg md:text-xl text-stone-600 italic font-serif">Professor Simulator</p>
+           <p className="text-lg md:text-xl text-stone-600 italic font-serif">作者:楠瓜 and Gemini</p>
         </div>
         
         <Card className="p-8 transform hover:scale-105 transition-transform duration-300 cursor-default">
